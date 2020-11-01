@@ -132,3 +132,4 @@ print("gini_split(Windy) =", giniIndex(
         ["false", "no"],
     ],
 ], ["yes", "no"])) # RESULT: gini_split(Windy) = 0.42857142857142855 ~ 0.429
+print("Ngoc ne")
