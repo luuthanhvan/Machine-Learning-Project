@@ -2,7 +2,7 @@
 #   +Node: nút cần xét của cây
 #   +Row: số thứ tự hàng cần dự đoán trong tập dữ liệu.
 #        Tức là mỗi lần hàm predict được gọi nó chỉ dự đoán cho một dòng thôi.
-#        Để dự đoán cho một tập dữ liệu test để tính độ chính xác ta cần sử dụng vòng lặp "for row in test:"
+#        Để dự đoán cho một tập dữ liệu test để tính độ chính xác ta cần sử dụng vòng lặp "for row in test"
 def predict(node, row):
 	if row[node['index']] < node['value']:
         # Dòng 7, kiểm tra xem nên duyệt con bên trái hay con bên phải của nút
