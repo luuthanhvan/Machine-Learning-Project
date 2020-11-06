@@ -1,134 +1,45 @@
-''' 
-Tính chỉ số Gini
-- groups: mảng chứa các nhóm giá trị của 1 thuộc tính
-- classes: mảng chứa các giá trị nhãn
-ví dụ ở tập dữ liệu weather: thuộc tính outlook có 3 nhóm giá trị là sunny, overcast và rain và cột nhãn có 2 giá trị là Yes và No
-groups = [sunny, outlook, rain]
-classes = [yes, no]
 '''
-def giniIndex(groups, classes):
-    # Tổng số lượng phần tử (instance) của 1 thuộc tính
-    nbInstances = float(sum([len(group) for group in groups])) # tương ứng với N
-    
-    # Dòng 11 được viết lại như sau:
-    # nbInstances = 0.0
-    # for group in groups:
-    #     nbInstances += len(group)
-    
-    gini_split = 0.0
-    for group in groups:       
-        size = float(len(group))
-        if size == 0: continue
+Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
 
-        sum_p = 0.0
-        for classVal in classes:
-            p = [row[-1] for row in group].count(classVal)/size
-            # Dòng số 25 được viết lại như sau:
-            # cnt = 0
-            # for row in group:
-            #     if(row[-1] == classVal):
-            #         cnt += 1
-            # p = cnt/size
-            sum_p += p*p
-        
-        gini_T = 1.0 - sum_p
-        gini_split += (size/nbInstances)*gini_T
-
-    return gini_split
-
-# test Gini values for Outlook attribute
-print("gini_split(Outlook) =", giniIndex(
-[
-    [ # sunny
-        ["sunny", "no"], 
-        ["sunny", "no"],
-        ["sunny", "no"],
-        ["sunny", "yes"],
-        ["sunny", "yes"],
-    ],
-    [ # overcast
-        ["overcast", "yes"],
-        ["overcast", "yes"],
-        ["overcast", "yes"],
-        ["overcast", "yes"],
-    ],
-    [ # rain
-        ["rain", "yes"],
-        ["rain", "yes"],
-        ["rain", "yes"],
-        ["rain", "no"],
-        ["rain", "no"],
-    ]
-], ["yes", "no"])) # RESULT: gini_split(Outlook) = 0.34285714285714286 ~ 0.343
+1. Đọc dữ liệu (tiền xử lý nếu cần):
+- Input: none
+- Output: trả về tập dữ liệu
+def read_file():
+	# đọc file csv từ thư viện pandas <- dataset
+    return dataset
 
 
-# test Gini values for Temperature attribute
-print("gini_split(Temperature) =", giniIndex(
-[
-    [ # hot
-        ["hot", "yes"], 
-        ["hot", "yes"],
-        ["hot", "no"],
-        ["hot", "no"],
-    ],
-    [ # mild
-        ["mild", "yes"],
-        ["mild", "yes"],
-        ["mild", "yes"],
-        ["mild", "yes"],
-        ["mild", "no"],
-        ["mild", "no"],
-    ],
-    [ # cool
-        ["cool", "yes"],
-        ["cool", "yes"],
-        ["cool", "yes"],
-        ["cool", "no"],
-    ]
-], ["yes", "no"])) # RESULT: gini_split(Temperature) = 0.44047619047619047 ~ 0.44
+2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
+- Input:
+    + dataset: tập dữ liệu đọc từ file
+    + test_size: kích thước tập dữ liệu kiểm tra
+- Output:
+	+ train_data: tập dữ liệu huấn luyện
+	+ test_data: tập dữ liệu kiểm tra
+import random
+def train_test_split(dataset, test_size):
+	# cần tìm hiểu hàm random
+    return train_data, test_data
 
-# test Gini values for Humidity attribute
-print("gini_split(Humidity) =", giniIndex(
-[
-    [ # high
-        ["high", "yes"], 
-        ["high", "yes"],
-        ["high", "yes"],
-        ["high", "no"],
-        ["high", "no"],
-        ["high", "no"],
-        ["high", "no"],
-    ],
-    [ # normal
-        ["normal", "yes"],
-        ["normal", "yes"],
-        ["normal", "yes"],
-        ["normal", "yes"],
-        ["normal", "yes"],
-        ["normal", "yes"],
-        ["normal", "no"],
-    ],
-], ["yes", "no"])) # RESULT: gini_split(Humidity) = 0.3673469387755103 ~ 0.367
 
-# test Gini values for Windy attribute
-print("gini_split(Windy) =", giniIndex(
-[
-    [ # true
-        ["true", "yes"], 
-        ["true", "yes"],
-        ["true", "yes"],
-        ["true", "no"],
-        ["true", "no"],
-        ["true", "no"],
-    ],
-    [ # false
-        ["false", "yes"],
-        ["false", "yes"],
-        ["false", "yes"],
-        ["false", "yes"],
-        ["false", "yes"],
-        ["false", "yes"],
-        ["false", "no"],
-        ["false", "no"],
-    ],
-], ["yes", "no"])) # RESULT: gini_split(Windy) = 0.42857142857142855 ~ 0.429
+3. Xây dựng cây
+def decision_tree_algorithm(data_train, counter, min_samples_leaf, max_depth):
+    return tree
+
+sub_tree = {"question": ["yes_answer", 
+                         "no_answer"]}
+                         
+example_tree = {'petal_width <= 0.8': ['Iris-setosa',
+                        {'petal_width <= 1.65': [{'petal_length <= 4.95': ['Iris-versicolor',
+                                                                           'Iris-virginica']},
+                                                 'Iris-virginica']}]}
+
+4. Dự đoán nhãn cho tập dữ liệu kiểm tra
+def predict(tree, data_test):
+    return y_pred
+
+5. Tính toán độ chính xác tổng thể
+def cal_accuracy_all(y_pred, test_data):
+    return accuracy_score
+
+'''
