@@ -11,11 +11,12 @@ def read_file():
     return dataset'''
 
 def readFile(fileName):
-    with open(fileName, newline='\n') as file:
-        reader = csv.reader(file)
-        dataset = list(reader)
-        dataset.remove(dataset[0])
+    with open(fileName) as file:
+        data = csv.reader(file) # Su dung phuong thuc reader trong thu vien csv de themmdu lieu vao bien data
+        dataset = list(data) # Dua data vao mot list
+        dataset.remove(dataset[0]) # Loai bo header
         return dataset
+
 
 '''2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
 - Input:
@@ -31,14 +32,21 @@ def train_test_split(dataset, test_size):
 
 def train_test_split(dataset, test_size):
     train_data, test_data = list(), list()
-    size = round(test_size*len(dataset))
-    random.shuffle(dataset)
-    for i in range(len(dataset)):
+    size = round(test_size*len(dataset)) #Vi tri de chia tap du lieu
+    random.shuffle(dataset) #Xao tron dataset
+    for i in range(len(dataset)): # Them du lieu vao 2 bien train_data va test_data
         if(i<=size):
             train_data.insert(i, dataset[i])
         else:
             test_data.insert(i,dataset[i])
     return train_data, test_data
+
+'''#Kiem tra
+dataset = readFile("../data_set/iris_data.csv")
+print(dataset)
+train, test = train_test_split(dataset, 2/3)
+print(train)
+print(test)'''
 
 
 '''3. Xây dựng cây
