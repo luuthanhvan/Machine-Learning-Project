@@ -30,10 +30,10 @@ def train_test_split(dataset, test_size):
 	# cần tìm hiểu hàm random
     return train_data, test_data'''
 
-def train_test_split(dataset, test_size):
+def train_test_split(dataset, test_size) :
     train_data, test_data = list(), list()
     size = round(test_size*len(dataset))  #Vi tri de chia tap du lieu
-    random.shuffle(dataset)  #Xao tron dataset
+    random.shuffle(dataset)
     for i in range(len(dataset)):  # Them du lieu vao 2 bien train_data va test_data
         if(i<=size):
             test_data.insert(i, dataset[i])
@@ -41,12 +41,13 @@ def train_test_split(dataset, test_size):
             train_data.insert(i, dataset[i])
     return train_data, test_data
 
+
 ''''#Kiem tra
 dataset = readFile("../data_set/iris_data.csv")
-print(dataset)
-train, test = train_test_split(dataset, 1/3)
-print(train)
-print(test)'''
+random.seed(0)
+train, test = train_test_split(dataset, 2/3)
+print(train)'''
+
 
 
 '''3. Xây dựng cây
