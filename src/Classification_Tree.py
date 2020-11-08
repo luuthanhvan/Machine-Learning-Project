@@ -32,19 +32,19 @@ def train_test_split(dataset, test_size):
 
 def train_test_split(dataset, test_size):
     train_data, test_data = list(), list()
-    size = round(test_size*len(dataset)) #Vi tri de chia tap du lieu
-    random.shuffle(dataset) #Xao tron dataset
-    for i in range(len(dataset)): # Them du lieu vao 2 bien train_data va test_data
+    size = round(test_size*len(dataset))  #Vi tri de chia tap du lieu
+    random.shuffle(dataset)  #Xao tron dataset
+    for i in range(len(dataset)):  # Them du lieu vao 2 bien train_data va test_data
         if(i<=size):
-            train_data.insert(i, dataset[i])
+            test_data.insert(i, dataset[i])
         else:
-            test_data.insert(i,dataset[i])
+            train_data.insert(i, dataset[i])
     return train_data, test_data
 
-'''#Kiem tra
+''''#Kiem tra
 dataset = readFile("../data_set/iris_data.csv")
 print(dataset)
-train, test = train_test_split(dataset, 2/3)
+train, test = train_test_split(dataset, 1/3)
 print(train)
 print(test)'''
 
