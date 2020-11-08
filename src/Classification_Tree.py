@@ -8,7 +8,7 @@ from pprint import pprint
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
 1. Đọc dữ liệu (tiền xử lý nếu cần):
-- Input: none
+- Input: tên file hoặc đường dẫn đến file .csv
 - Output: trả về tập dữ liệu
 def read_file():
 	# đọc file csv từ thư viện pandas <- dataset
@@ -184,33 +184,7 @@ def info_A(left, right):
     
     return overall_entropy
 
-# 2. Sử dụng chỉ số Gini, chọn thuộc tính phân hoạch có giá trị nhỏ nhất
-def gini(data):
-    label_column = data[:, -1]
-    classes, counts_classes = np.unique(label_column, return_counts = True)
-
-    sum_p = 0.0
-    for i in range(len(counts_classes)):
-        # Tính xác suất xuất hiện cho từng phân lớp <- lưu vào biến p
-        p = counts_classes[i]/sum(counts_classes)
-        # Ta có công thức: gini(Ti) = 1 - sum(p_j*p_j), với i, j = 1..n
-        # Vì thế ta cần cộng dồn các giá trị (p*p) vào biến sum_p
-        sum_p += (p * p)
-
-    gini_T = 1 - sum_p # cuối cùng tính chỉ số gini(T) = 1 - sum_p
-
-    return gini_T
-
-def gini_split(left, right):
-    # Ta có công thức: gini_split(T) = N1/N*gini(T1) + N2/N*gini(T2) + ... + Nn/N*gini(Tv)
-    N = len(left) + len(right)
-    N1 = len(left)
-    N2 = len(right)
-
-    gini_index = ((N1 / N) * gini(left)) + ((N2 / N) * gini(right))
-    
-    return gini_index
-
+# Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
 def choose_best_split(data, point_splits):
     information_gain = -9999999
     for col_index in point_splits:
@@ -226,7 +200,7 @@ def choose_best_split(data, point_splits):
     return best_split_column, best_split_value
 
 def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):    
-    # data preparations
+    # nút gốc
     if counter == 0:
         global COLUMN_HEADERS
         COLUMN_HEADERS = df.columns
@@ -234,32 +208,30 @@ def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):
     else:
         data = df          
 
-    # base cases
+    # trường hợp để dừng phân hoạch
     if (check_purity(data)) or (len(data) < min_samples) or (counter == max_depth):
         leaf_node = create_leaf_node(data)
         return leaf_node
     
-    # recursive part
     else:    
         counter += 1
 
-        # helper functions
+        # tìm các điểm phân hoạch trên toàn bộ tập DL truyền vào (data)
         point_splits = get_point_splits(data)
+        # chọn thuộc tính và giá trị của thuộc tính để phân hoạch
         split_column, split_value = choose_best_split(data, point_splits)
+        # phân hoạch nhị phân tập DL ta thành 2 cây con trái và phải dựa trên thuộc tính và giá trị của thuộc tính đó vừa tìm được ở trên
         left, right = binary_split_data(data, split_column, split_value)
         
-        # instantiate sub-tree
-        feature_name = COLUMN_HEADERS[split_column]
-        question = "{} <= {}".format(feature_name, split_value)
+        # tạo cây con
+        feature_name = COLUMN_HEADERS[split_column] # tên thuộc tính
+        question = "{} <= {}".format(feature_name, split_value) # điều kiện
         sub_tree = {question: []}
         
-        # find answers (recursion)
+        # lặp lại việc phân hoạch 1 cách đệ quy cho cây con trái và phải
         yes_answer = decision_tree_algorithm(left, counter, min_samples, max_depth)
         no_answer = decision_tree_algorithm(right, counter, min_samples, max_depth)
         
-        # If the answers are the same, then there is no point in asking the qestion.
-        # This could happen when the data is classified even though it is not pure
-        # yet (min_samples or max_depth base cases).
         if yes_answer == no_answer:
             sub_tree = yes_answer
         else:
