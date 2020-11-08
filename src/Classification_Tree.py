@@ -24,7 +24,7 @@ def train_test_split(dataset, test_size):
 
 3. Xây dựng cây
 def decision_tree_algorithm(data_train, counter, min_samples_leaf, max_depth):
-    return tree
+    return sub_tree
 
 sub_tree = {"question": ["yes_answer", 
                          "no_answer"]}
