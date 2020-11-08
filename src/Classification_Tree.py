@@ -241,23 +241,108 @@ def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):
         return sub_tree
 
 '''
-4. Dự đoán nhãn cho tập dữ liệu kiểm tra
+4. Dự đoán nhãn cho tập dữ liệu kiểm tra'''
+#Dự đoán nhãn cho từng dòng dữ liệu
+def predict_row(tree, row_data_test):
+    left = 0 
+    right = 1
+    pprint
+    for label in tree:
+        #Tách keys đầu tiên trong từ điển, xét nút gốc 
+        '''Ví dụ: Với cây bên dưới
+        {'petalLength <= 2.5999999999999996': ['Iris-setosa',
+                                       {'petalWidth <= 1.65': [{'petalLength <= 4.95': ['Iris-versicolor',
+                                                                                        {'petalWidth <= 1.55': ['Iris-virginica',
+                                                                                                                'Iris-versicolor']}]},
+                                                               {'petalLength <= 4.85': [{'sepalWidth <= 3.1': ['Iris-virginica',
+                                                                                                               'Iris-versicolor']},
+                                                                                        'Iris-virginica']}]}]}
+        Sau khi thực thi câu lệnh split_label = label.split() sẽ có kết quả:                                                                               
+            ['petalLength', '<=', '2.5999999999999996']
+            split_label[0]: thuộc tính
+            split_label[2]: giá trị thuộc tính 
+        '''
+        split_label = label.split()
+        properties = split_label[0]
+        value = float(split_label[2])
+    c= pd.to_numeric(row_data_test[properties])
+    #Nếu giá trị dữ liệu test <= giá trị thuộc tính của cây ->Xét con bên trái
+    if c <= value:
+        #Nếu con trái chưa phải nút lá thì đệ quy cho đến khi tìm thấy nút lá
+        if isinstance(tree.get(label)[left],dict):
+            return predict_row(tree.get(label)[left],row_data_test)
+        else:
+            return tree.get(label)[left]
+    else:
+        if isinstance(tree.get(label)[right],dict):
+            return predict_row(tree.get(label)[right],row_data_test)
+        else:
+            return tree.get(label)[right]
+#Dự đoán nhãn cho tập dữ liệu test
 def predict(tree, data_test):
+    y_pred = []
+    for row in range(0,len(data_test)):
+        row_data = data_test.iloc[row]
+        y_pred.append(predict_row(tree,row_data))
     return y_pred
 
-5. Tính toán độ chính xác tổng thể
-def cal_accuracy_all(y_pred, test_data):
+'''5. Tính toán độ chính xác tổng thể'''
+def cal_accuracy_all(y_pred, y_test):
+    correct =0
+    #Lặp tất cả các nhãn trong tập test
+    for i in range (0,len(y_test)):
+        #So sánh nhãn tập test với giá trị dự đoán, nếu giống tăng 1, không giống không cần quan tâm đâu
+        if y_pred[i] == y_test[i]:
+            correct+= 1
+    accuracy_score = correct/len(y_pred)*100
     return accuracy_score
 
-'''
+'''6.Hàm tính độ chính xác cho từng thực thể'''
+def confusion_matrix(y_test,y_pred,label):
+    #Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
+    arr = [[]]
+    #Tạo từ điển để lưu số lượng dự đoán cho từng label
+    # Ví dụ: correct = { 0:8,1:5}
+    #Tức là, trong tập dự đoán tìm thấy 8 nhãn có label là 0 và 5 nhãn có label là 1
+    correct = {}
+    t=0
+    #Lặp lần lượt các nhãn có trong tập dữ liệu test 
+    for i in np.unique(y_test):
+        #Khởi tạo giá trị ban đầu cho từng label = 0
+        for e in  label:
+            correct[e] = 0
+        lb = i
+        #Duỵet lần lượt tất cả cac nhãn trong tập test
+        for j in range(0,len(y_test)):
+            #Chi thực hiện kiểm tra nếu nhan phan trong tập test là label đang xét
+            if y_test[j] == lb:
+                
+                for key in correct.keys():
+                    #Tinh do chinh xac va sai  cho từng label  trong tung lop
+                    if key == y_pred[j]:
+                    #Tang gia tri y_pred cho nhan = key
+                        correct[key] = correct[key]+1
+        #Add gia tri từng label vào ma trận dự đoán
+        for key in correct.keys(): 
+            arr[t].append(correct[key])                
+        t+= 1
+        arr.append([])
+    arr.pop()
+    for i in arr:
+        print(i)
+
+
 
 dataset = readFile("../data_set/iris_data.csv")
 # print(dataset)
 random.seed(0)
 train_data, test_data = train_test_split(dataset, test_size=0.1)
-# print(train_data)
-# print(test_data)
-
+#print(train_data)
+#print(test_data)
+y_test = test_data.iloc[:,4]
+X_test = test_data.iloc[:,0:4]
+#print(y_test)
+#print(X_test)
 # Test hàm check_purity(data)
 #print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
 #dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
@@ -290,6 +375,11 @@ train_data, test_data = train_test_split(dataset, test_size=0.1)
     3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
 }
 '''
-
+z = []
 tree = decision_tree_algorithm(train_data)
-pprint(tree)
+y_pred = predict(tree,X_test)
+# Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
+y_test = y_test.tolist()
+print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
+confusion_matrix(y_test,y_pred,["Iris-setosa", "Iris-versicolor", "Iris-virginica"])
+#pprint(tree)
