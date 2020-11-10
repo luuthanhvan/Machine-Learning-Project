@@ -14,8 +14,8 @@ def read_file():
 	# đọc file csv từ thư viện pandas <- dataset
     return dataset
 '''
-def readFile(fileName):
-    dataset = pd.read_csv(fileName)
+def read_file():
+    dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
 '''
@@ -331,55 +331,60 @@ def confusion_matrix(y_test,y_pred,label):
     for i in arr:
         print(i)
 
+def main():
+    dataset = read_file()
+    # print(dataset)
+    random.seed(0)
+    train_data, test_data = train_test_split(dataset, test_size=0.1)
+    # print("Train data: ", train_data)
+    # print("Test data: ", test_data)
+    # y_test = test_data.iloc[:,4]
+    # X_test = test_data.iloc[:,0:4]
+    y_test = test_data.iloc[:, -1] # lấy cột cuối cùng
+    X_test = test_data.iloc[:, :-1] # bỏ cột cuối cùng, lấy các cột còn lại
+    # print(y_test)
+    # print(X_test)
+    # Test hàm check_purity(data)
+    #print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
+    #dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
+    #print(dt)
+    '''
+    sepalLength  sepalWidth  petalLength  petalWidth      species
+    0          5.1         3.5          1.4         0.2  Iris-setosa
+    1          4.9         3.0          1.4         0.2  Iris-setosa
+    2          4.7         3.2          1.3         0.2  Iris-setosa
+    3          4.6         3.1          1.5         0.2  Iris-setosa
+    4          5.0         3.6          1.4         0.2  Iris-setosa
+    '''
+    #print(check_purity(dt)) 
+    # kết quả là True, bởi vì 5 phần tử đầu trong tập DL huấn luyện đều có cùng 1 nhãn là Iris-setosa(check_purity(dt))
 
 
-dataset = readFile("../data_set/iris_data.csv")
-# print(dataset)
-random.seed(0)
-train_data, test_data = train_test_split(dataset, test_size=0.1)
-#print(train_data)
-#print(test_data)
-y_test = test_data.iloc[:,4]
-X_test = test_data.iloc[:,0:4]
-#print(y_test)
-#print(X_test)
-# Test hàm check_purity(data)
-#print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
-#dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
-#print(dt)
-'''
-   sepalLength  sepalWidth  petalLength  petalWidth      species
-0          5.1         3.5          1.4         0.2  Iris-setosa
-1          4.9         3.0          1.4         0.2  Iris-setosa
-2          4.7         3.2          1.3         0.2  Iris-setosa
-3          4.6         3.1          1.5         0.2  Iris-setosa
-4          5.0         3.6          1.4         0.2  Iris-setosa
-'''
-#print(check_purity(dt)) 
-# kết quả là True, bởi vì 5 phần tử đầu trong tập DL huấn luyện đều có cùng 1 nhãn là Iris-setosa(check_purity(dt))
+    # Test hàm create_leaf_node()
+    # leaf_node = create_leaf_node(train_data.values)
+    # print(leaf_node)
 
 
-# Test hàm create_leaf_node()
-# leaf_node = create_leaf_node(train_data.values)
-# print(leaf_node)
-
-
-# Test hàm get_point_splits(data)
-#point_splits = get_point_splits(train_data.values)
-#print(point_splits)
-''' Result: point_splits = {key: value, } <=> {col_index: [], }
-{
-    0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
-    1: [2.1, 2.25, 2.3499999999999996, 2.45, 2.55, 2.6500000000000004, 2.75, 2.8499999999999996, 2.95, 3.05, 3.1500000000000004, 3.25, 3.3499999999999996, 3.45, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.300000000000001], 
-    2: [1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.7999999999999998, 2.5999999999999996, 3.4, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.25, 4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.25, 6.5, 6.65, 6.800000000000001], 
-    3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
-}
-'''
-z = []
-tree = decision_tree_algorithm(train_data)
-y_pred = predict(tree,X_test)
-# Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-y_test = y_test.tolist()
-print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
-confusion_matrix(y_test,y_pred,["Iris-setosa", "Iris-versicolor", "Iris-virginica"])
-#pprint(tree)
+    # Test hàm get_point_splits(data)
+    #point_splits = get_point_splits(train_data.values)
+    #print(point_splits)
+    ''' Result: point_splits = {key: value, } <=> {col_index: [], }
+    {
+        0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
+        1: [2.1, 2.25, 2.3499999999999996, 2.45, 2.55, 2.6500000000000004, 2.75, 2.8499999999999996, 2.95, 3.05, 3.1500000000000004, 3.25, 3.3499999999999996, 3.45, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.300000000000001], 
+        2: [1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.7999999999999998, 2.5999999999999996, 3.4, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.25, 4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.25, 6.5, 6.65, 6.800000000000001], 
+        3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
+    }
+    '''
+    
+    tree = decision_tree_algorithm(train_data)
+    # pprint(tree)
+    y_pred = predict(tree, X_test)
+    print(y_pred)
+    # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
+    y_test = y_test.tolist()
+    print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
+    confusion_matrix(y_test,y_pred,[1.0, 0.0])
+# gọi hàm main
+if __name__=="__main__":
+    main()
