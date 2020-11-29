@@ -20,6 +20,14 @@ def read_file():
     dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
+# hàm kiểm tra giá trị của thuộc tính là liên tục hay không liên tục
+# trả về True nếu giá trị là liên tục, ngược lại trả về False
+def is_continuous(atrribute):
+    unique_column_values = np.unique(atrribute)
+    if len(unique_column_values) > 2:
+        return True
+    return False
+
 '''
 2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
 - Input:
@@ -98,7 +106,7 @@ def create_leaf_node(data):
     
     return leaf_node
 
-def get_point_splits(data):
+def get_point_splits_2(data):
     point_splits = {} # khởi tạo 1 từ điển rỗng
     '''
     Kiểu từ điển (dictionary) là các phần tử của nó được biểu diễn dưới dạng {key: value}
@@ -148,7 +156,7 @@ def get_point_splits(data):
     # xem cụ thể output ở phần test hàm này bên dưới nhe
     return point_splits
 
-def get_point_splits_2(data):
+def get_point_splits(data):
     point_splits = {}
     no_rows, no_cols = data.shape
     for col_index in range(no_cols-1):
@@ -169,8 +177,13 @@ def get_point_splits_2(data):
 def binary_split_data(data, split_column, split_value):
     split_column_values = data[:, split_column]
     # print(split_column_value)
-    left = data[split_column_values <= split_value]
-    right = data[split_column_values > split_value]
+    type_of_feature = FEATURE_TYPES[split_column]
+    if type_of_feature == "continuous":
+        left = data[split_column_values <= split_value]
+        right = data[split_column_values > split_value]
+    else:
+        left = data[split_column_values == split_value]
+        right = data[split_column_values != split_value]
     
     return left, right
 
@@ -214,19 +227,45 @@ def choose_best_split(data, point_splits):
             # phân hoạch dữ liệu và tính entropy tại các điểm trong point_splits
             left, right = binary_split_data(data, split_column = col_index, split_value = value)
             current_information_gain = info(data) - info_A(left, right)
+            
             # nếu tìm được 1 giá trị info_gain mới lớn hơn giá trị info_gain cũ
             if current_information_gain > information_gain:
                 information_gain = current_information_gain # cập nhật lại giá trị độ lợi thông tin
                 best_split_column = col_index # lưu lại vị trí cột (thuộc tính) phân hoạch
                 best_split_value = value # lưu lại giá trị phân hoạch
+    
     # cuối cùng trả về thuộc tính (vị trí cột) và giá trị để phân hoạch
     return best_split_column, best_split_value
+
+# hàm kiểm tra giá trị của 1 cột thuộc tính, trả về True nếu là giá trị liên tục, ngược lại trả về false
+def is_continuous(column):
+    unique_column_values = np.unique(column)
+    if len(unique_column_values) > 2:
+        return True
+    return False
+
+# phân chia lại tập dữ liệu thành hai phần: 1 phần chứa các thuộc tính có giá trị liên tục, 1 phần chứa các giá trị không liên tục
+def determine_type_of_feature(data):
+    feature_types = []
+    no_rows, no_cols = data.shape # lấy số lượng hàng, cột
+
+    # duyệt qua từng cột
+    for column_index in range(no_cols-1):
+        column_value = data.iloc[:, column_index] # lấy các giá trị tại 1 cột
+        # kiểm tra nếu giá trị tại cột đó có giá trị liên tục
+        if is_continuous(column_value):
+            feature_types.append("continuous") # đặt tên là continuous (liên tục)
+        else: # ngược lại đặt tên là categorical (không liên tục)
+            feature_types.append("categorical")
+    
+    return feature_types
 
 def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):    
     # nút gốc
     if counter == 0:
-        global COLUMN_HEADERS
+        global COLUMN_HEADERS, FEATURE_TYPES
         COLUMN_HEADERS = dt.columns
+        FEATURE_TYPES = determine_type_of_feature(dt)
         data = dt.values
     else:
         data = dt         
@@ -238,7 +277,6 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
     
     else:    
         counter += 1
-
         # tìm các điểm phân hoạch trên toàn bộ tập DL truyền vào (data)
         point_splits = get_point_splits(data)
         # chọn thuộc tính và giá trị của thuộc tính để phân hoạch
@@ -246,9 +284,18 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
         # phân hoạch nhị phân tập DL ta thành 2 cây con trái và phải dựa trên thuộc tính và giá trị của thuộc tính đó vừa tìm được ở trên
         left, right = binary_split_data(data, split_column, split_value)
         
+        # kiểm tra dữ liệu rỗng
+        if len(left) == 0 or len(right) == 0:
+            leaf_node = create_leaf_node(data)
+            return leaf_node
+        
         # tạo cây con
         feature_name = COLUMN_HEADERS[split_column] # tên thuộc tính
-        question = "{} <= {}".format(feature_name, split_value) # điều kiện
+        type_of_feature = FEATURE_TYPES[split_column]
+        if type_of_feature == "continuous":
+            question = "{} <= {}".format(feature_name, split_value) # điều kiện
+        else:
+            question = "{} < {}".format(feature_name, split_value)
         sub_tree = {question: []}
         
         # lặp lại việc phân hoạch 1 cách đệ quy cho cây con trái và phải
@@ -286,7 +333,7 @@ def cal_mean(X_train, y_train):
     return p
 
 # hàm tính mật độ xác xuất f(x)
-def gaussianNB(test_data, column, value):
+def gaussianNB(test_data):
     '''
         column: vị trí cột cần tính xác xuất
         value: giá trị
@@ -296,6 +343,7 @@ def gaussianNB(test_data, column, value):
     '''
     mean = {0: [50, 20], 1: [100, 20], 2: [30, 100], 3: [85, 70], 4: [76, 52], 5: [36, 28], 6: [50, 80], 7: [78, 25], 8: [69, 87], 9: [36, 45], 10: [69, 70], 11: [90, 40]}
     standard_deviation = {0: [78, 63], 1: [72, 36], 2: [23, 45], 3: [78, 63], 4: [72, 36], 5: [48, 79], 6: [45, 96], 7: [74, 69], 8: [48, 57], 9: [93, 67], 10: [67, 48], 11: [85, 70]}
+    
     label_column = np.unique(test_data.iloc[:, -1])
     proportion = []
     ''' 
@@ -408,6 +456,10 @@ def main():
     # print(dataset)
     random.seed(0)
     train_data, test_data = train_test_split(dataset, test_size=0.1)
+
+    # feature_types = determine_type_of_feature(train_data)
+    # print(feature_types)
+
     # print("Train data: ", train_data)
     # print("Test data: ", test_data)
     # y_test = test_data.iloc[:,4]
@@ -418,10 +470,10 @@ def main():
     y_train = train_data.iloc[:, -1]
     X_train = train_data.iloc[:, :-1]
     
-    cal_mean(X_train, y_train)
+    # cal_mean(X_train, y_train)
     
-    p = gaussianNB(test_data, 1, 56)
-    print(p)
+    # p = gaussianNB(test_data, 1, 56)
+    # print(p)
     # print(y_test)
     # print(X_test)
     # Test hàm check_purity(data)
@@ -457,13 +509,13 @@ def main():
     }
     '''
     
-    # tree = decision_tree_classifier(train_data)
-    # pprint(tree)
-    # y_pred = predict(tree, X_test)
+    tree = decision_tree_classifier(train_data)
+    pprint(tree)
+    y_pred = predict(tree, X_test)
     # print(y_pred)
     # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-    # y_test = y_test.tolist()
-    # print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
+    y_test = y_test.tolist()
+    print("Do chinh xac: ", cal_accuracy_all(y_pred,y_test))
     # confusion_matrix(y_test,y_pred,[1.0, 0.0])
 
 # gọi hàm main
