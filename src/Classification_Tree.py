@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import array as arr
 from pprint import pprint
+from collections import deque
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
@@ -15,6 +16,7 @@ def read_file():
     return dataset
 '''
 def read_file():
+    # dataset = pd.read_csv("../data_set/iris_data.csv", delimiter=",")
     dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
@@ -43,7 +45,7 @@ def train_test_split(dataset, test_size):
     return train_data, test_data
 
 '''3. Xây dựng cây
-def decision_tree_algorithm(data_train, counter, min_samples_leaf, max_depth):
+def decision_tree_classifier(dt, counter, min_samples_leaf, max_depth):
     return sub_tree
 
 sub_tree = {"question": ["yes_answer", 
@@ -146,6 +148,23 @@ def get_point_splits(data):
     # xem cụ thể output ở phần test hàm này bên dưới nhe
     return point_splits
 
+def get_point_splits_2(data):
+    point_splits = {}
+    no_rows, no_cols = data.shape
+    for col_index in range(no_cols-1):
+        point_splits[col_index] = []
+        for row_index in range(no_rows):
+            if row_index != 0:
+                current_column_class = data[row_index, -1]
+                previous_column_class = data[row_index-1, -1]
+
+                if current_column_class != previous_column_class:
+                    column_value = data[row_index, col_index]
+                    point_splits[col_index].append(column_value)
+
+    # print(point_splits)
+    return point_splits
+
 # Phân hoạch nhị phân dựa trên 1 giá trị ngưỡng cho 1 thuộc tính (cột) trên tập dữ liệu
 def binary_split_data(data, split_column, split_value):
     split_column_values = data[:, split_column]
@@ -186,30 +205,34 @@ def info_A(left, right):
 
 # Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
 def choose_best_split(data, point_splits):
+    # để tìm được độ lợi thông tin lớn, ta cần khởi tạo giá trị ban đầu cho biến information_gain có giá trị là âm vô cùng
     information_gain = -9999999
+    # duyệt qua các cột trong point_splits
     for col_index in point_splits:
+        # duyệt qua các giá trị trong từng cột
         for value in point_splits[col_index]:
+            # phân hoạch dữ liệu và tính entropy tại các điểm trong point_splits
             left, right = binary_split_data(data, split_column = col_index, split_value = value)
             current_information_gain = info(data) - info_A(left, right)
-
+            # nếu tìm được 1 giá trị info_gain mới lớn hơn giá trị info_gain cũ
             if current_information_gain > information_gain:
-                information_gain = current_information_gain
-                best_split_column = col_index
-                best_split_value = value
-
+                information_gain = current_information_gain # cập nhật lại giá trị độ lợi thông tin
+                best_split_column = col_index # lưu lại vị trí cột (thuộc tính) phân hoạch
+                best_split_value = value # lưu lại giá trị phân hoạch
+    # cuối cùng trả về thuộc tính (vị trí cột) và giá trị để phân hoạch
     return best_split_column, best_split_value
 
-def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):    
+def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):    
     # nút gốc
     if counter == 0:
         global COLUMN_HEADERS
-        COLUMN_HEADERS = df.columns
-        data = df.values
+        COLUMN_HEADERS = dt.columns
+        data = dt.values
     else:
-        data = df          
+        data = dt         
 
     # trường hợp để dừng phân hoạch
-    if (check_purity(data)) or (len(data) < min_samples) or (counter == max_depth):
+    if (check_purity(data)) or (len(data) < min_samples_leaf) or (counter == max_depth):
         leaf_node = create_leaf_node(data)
         return leaf_node
     
@@ -229,8 +252,8 @@ def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):
         sub_tree = {question: []}
         
         # lặp lại việc phân hoạch 1 cách đệ quy cho cây con trái và phải
-        yes_answer = decision_tree_algorithm(left, counter, min_samples, max_depth)
-        no_answer = decision_tree_algorithm(right, counter, min_samples, max_depth)
+        yes_answer = decision_tree_classifier(left, counter, min_samples_leaf, max_depth)
+        no_answer = decision_tree_classifier(right, counter, min_samples_leaf, max_depth)
         
         if yes_answer == no_answer:
             sub_tree = yes_answer
@@ -239,6 +262,32 @@ def decision_tree_algorithm(df, counter=0, min_samples=2, max_depth=5):
             sub_tree[question].append(no_answer)
         
         return sub_tree
+
+# hàm tính mật độ xác xuất f(x)
+def gaussianNB(test_data, column, value):
+    '''
+        column: vị trí cột cần tính xác xuất
+        value: giá trị
+        ví dụ: cần tính xác xuất temperature = 66
+            column = temperature
+            value = 66
+    '''
+    mean = {0: [50, 20], 1: [100, 20], 2: [30, 100], 3: [85, 70], 4: [76, 52], 5: [36, 28], 6: [50, 80], 7: [78, 25], 8: [69, 87], 9: [36, 45], 10: [69, 70], 11: [90, 40]}
+    standard_deviation = {0: [78, 63], 1: [72, 36], 2: [23, 45], 3: [78, 63], 4: [72, 36], 5: [48, 79], 6: [45, 96], 7: [74, 69], 8: [48, 57], 9: [93, 67], 10: [67, 48], 11: [85, 70]}
+    label_column = np.unique(test_data.iloc[:, -1])
+    proportion = []
+    ''' 
+        f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
+    '''
+    e = 2.718281
+    pi = 3.14
+    for label_index in range(len(label_column)):
+        num1 = 1 / (np.sqrt(2*pi) * np.sqrt(standard_deviation[column][label_index]))
+        num2 = np.power(e, ((-(value-mean[column][label_index])*(value-mean[column][label_index]))/(2*standard_deviation[column][label_index])))
+        fx = num1*num2
+        proportion.append(fx)
+
+    return proportion
 
 '''
 4. Dự đoán nhãn cho tập dữ liệu kiểm tra'''
@@ -278,6 +327,7 @@ def predict_row(tree, row_data_test):
             return predict_row(tree.get(label)[right],row_data_test)
         else:
             return tree.get(label)[right]
+
 #Dự đoán nhãn cho tập dữ liệu test
 def predict(tree, data_test):
     y_pred = []
@@ -342,6 +392,8 @@ def main():
     # X_test = test_data.iloc[:,0:4]
     y_test = test_data.iloc[:, -1] # lấy cột cuối cùng
     X_test = test_data.iloc[:, :-1] # bỏ cột cuối cùng, lấy các cột còn lại
+    p = gaussianNB(test_data, 1, 56)
+    print(p)
     # print(y_test)
     # print(X_test)
     # Test hàm check_purity(data)
@@ -365,9 +417,9 @@ def main():
     # print(leaf_node)
 
 
-    # Test hàm get_point_splits(data)
-    #point_splits = get_point_splits(train_data.values)
-    #print(point_splits)
+    # Test hàm get_point_splits(data) (t)
+    # point_splits = get_point_splits(train_data.values)
+    # print(point_splits)
     ''' Result: point_splits = {key: value, } <=> {col_index: [], }
     {
         0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
@@ -377,14 +429,15 @@ def main():
     }
     '''
     
-    tree = decision_tree_algorithm(train_data)
+    # tree = decision_tree_classifier(train_data)
     # pprint(tree)
-    y_pred = predict(tree, X_test)
-    print(y_pred)
+    # y_pred = predict(tree, X_test)
+    # print(y_pred)
     # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-    y_test = y_test.tolist()
-    print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
-    confusion_matrix(y_test,y_pred,[1.0, 0.0])
+    # y_test = y_test.tolist()
+    # print("Do chinh xac: ",cal_accuracy_all(y_pred,y_test))
+    # confusion_matrix(y_test,y_pred,[1.0, 0.0])
+
 # gọi hàm main
 if __name__=="__main__":
     main()
