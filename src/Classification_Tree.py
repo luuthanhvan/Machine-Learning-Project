@@ -262,6 +262,28 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
             sub_tree[question].append(no_answer)
         
         return sub_tree
+      
+'''Xây dựng giải thuật Bayes'''
+def cal_mean(X_train, y_train):
+    p = {}
+    sum_label = {}
+    n = {}
+    label = np.unique(y_train)
+    #print(label)
+    no_rows, no_cols = X_train.shape
+    for col_index in range(no_cols):#Lay tung thuoc tinh
+        p[col_index]= []
+        for i in range(len(label)): # Xet bien sum cho tung label 
+            sum_label[i] = 0.0
+            n[i] = 0
+        for row_index in range(no_rows):    #Duyet lan luot tat ca cac dong trong tung thuoc tinh            
+            for key in range(len(label)):# Lay lan luot tung nhan de so sanh
+                if y_train.iloc[row_index] == label[key]:
+                    sum_label[key] =  sum_label[key] + X_train.iloc[row_index,col_index]#Tinh tong
+                    n[key] = n[key] + 1
+        for i in range(len(label)):
+            p[col_index].append(sum_label[i]/n[i])
+    return p
 
 # hàm tính mật độ xác xuất f(x)
 def gaussianNB(test_data, column, value):
@@ -392,6 +414,12 @@ def main():
     # X_test = test_data.iloc[:,0:4]
     y_test = test_data.iloc[:, -1] # lấy cột cuối cùng
     X_test = test_data.iloc[:, :-1] # bỏ cột cuối cùng, lấy các cột còn lại
+
+    y_train = train_data.iloc[:, -1]
+    X_train = train_data.iloc[:, :-1]
+    
+    cal_mean(X_train, y_train)
+    
     p = gaussianNB(test_data, 1, 56)
     print(p)
     # print(y_test)
