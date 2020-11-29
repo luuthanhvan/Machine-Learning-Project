@@ -308,83 +308,7 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
             sub_tree[question].append(no_answer)
         
         return sub_tree
-
-'''Xây dựng giải thuật Bayes'''
-def cal_mean(X_train, y_train):
-    p = {}
-    sum_label = {}
-    n = {}
-    label = np.unique(y_train)
-    # print(label)
-    no_rows, no_cols = X_train.shape
-    for col_index in range(no_cols):  # Lay tung thuoc tinh
-        p[col_index] = []
-        for i in range(len(label)):  # Xet bien sum cho tung label
-            sum_label[i] = 0.0
-            n[i] = 0
-        for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
-            for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
-                if y_train.iloc[row_index] == label[key]:
-                    sum_label[key] = sum_label[key] + X_train.iloc[row_index, col_index]  # Tinh tong
-                    n[key] = n[key] + 1
-        for i in range(len(label)):
-            p[col_index].append(sum_label[i] / n[i])
-    return p
-
-
-def cal_standardDeviation(X_train, Y_train, mean):
-    no_rows, no_cols = X_train.shape
-    n = {}
-    p = {}
-    sum = {}
-    binhphuong = {}
-    label = np.unique(Y_train)
-    for col_index in range(no_cols):  # Lay tung thuoc tinh
-        values = mean[col_index]
-        p[col_index] = []
-        for i in range(len(label)):
-            sum[i] = 0.0
-            n[i] = 0
-        for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
-            for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
-                if Y_train.iloc[row_index] == label[key]:
-                    binhphuong[key] = math.pow(X_train.iloc[row_index, col_index] - values[key], 2)  # binh phuong
-                    sum[key] = sum[key] + binhphuong[key]  # Tong cac binh phuong
-                    n[key] = n[key] + 1
-        for i in range(len(label)):
-            p[col_index].append(sum[i] / (n[i] - 1))
-
-    return p
-
-
-# hàm tính mật độ xác xuất f(x)
-def gaussianNB(test_data):
-    '''
-        column: vị trí cột cần tính xác xuất
-        value: giá trị
-        ví dụ: cần tính xác xuất temperature = 66
-            column = temperature
-            value = 66
-    '''
-    mean = {0: [50, 20], 1: [100, 20], 2: [30, 100], 3: [85, 70], 4: [76, 52], 5: [36, 28], 6: [50, 80], 7: [78, 25], 8: [69, 87], 9: [36, 45], 10: [69, 70], 11: [90, 40]}
-    standard_deviation = {0: [78, 63], 1: [72, 36], 2: [23, 45], 3: [78, 63], 4: [72, 36], 5: [48, 79], 6: [45, 96], 7: [74, 69], 8: [48, 57], 9: [93, 67], 10: [67, 48], 11: [85, 70]}
     
-    label_column = np.unique(test_data.iloc[:, -1])
-    proportion = []
-    ''' 
-        f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
-    '''
-    e = 2.718281
-    pi = 3.14
-    for label_index in range(len(label_column)):
-        num1 = 1 / (np.sqrt(2 * pi) * np.sqrt(standard_deviation[column][label_index]))
-        num2 = np.power(e, ((-(value - mean[column][label_index]) * (value - mean[column][label_index])) / (
-                    2 * standard_deviation[column][label_index])))
-        fx = num1 * num2
-        proportion.append(fx)
-
-    return proportion
-
 
 '''
 4. Dự đoán nhãn cho tập dữ liệu kiểm tra
@@ -480,10 +404,92 @@ def confusion_matrix(y_test, y_pred, label):
     for i in arr:
         print(i)
 
+'''Xây dựng giải thuật Bayes'''
+def cal_mean(X_train, y_train):
+    p = {}
+    sum_label = {}
+    n = {}
+    label = np.unique(y_train)
+    # print(label)
+    no_rows, no_cols = X_train.shape
+    for col_index in range(no_cols):  # Lay tung thuoc tinh
+        column_value = X_train.iloc[:,col_index]
+        if is_continuous(column_value):
+            p[col_index] = []
+            for i in range(len(label)):  # Xet bien sum cho tung label
+                sum_label[i] = 0.0
+                n[i] = 0
+            for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
+                for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
+                    if y_train.iloc[row_index] == label[key]:
+                        sum_label[key] = sum_label[key] + X_train.iloc[row_index, col_index]  # Tinh tong
+                        n[key] = n[key] + 1
+            for i in range(len(label)):
+                p[col_index].append(sum_label[i] / n[i])
+    return p
 
+
+def cal_variance(X_train, Y_train):
+    no_rows, no_cols = X_train.shape
+    n = {}
+    p = {}
+    sum = {}
+    binhphuong = {}
+    label = np.unique(Y_train)
+    mean = cal_mean(X_train,Y_train)
+    for col_index in range(no_cols):  # Lay tung thuoc tinh
+        column_value = X_train.iloc[:,col_index]
+        if is_continuous(column_value):
+            values = mean[col_index]
+            p[col_index] = []
+            for i in range(len(label)):
+                sum[i] = 0.0
+                n[i] = 0
+            for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
+                for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
+                    if Y_train.iloc[row_index] == label[key]:
+                        binhphuong[key] = math.pow(X_train.iloc[row_index, col_index] - values[key], 2)  # binh phuong
+                        sum[key] = sum[key] + binhphuong[key]  # Tong cac binh phuong
+                        n[key] = n[key] + 1
+            for i in range(len(label)):
+                p[col_index].append(sum[i] / (n[i] - 1))
+
+    return p
+
+'''
+# hàm tính mật độ xác xuất f(x)
+def cal_proportion(X_train,y_train):
+    mean = cal_mean(X_train,y_train)
+    #print(mean)
+    variance = cal_variance(X_train,y_train)
+    proportion = {}
+    no_rows, no_cols = X_train.shape
+    e = 2.718281
+    pi = 3.14
+    ''' 
+        #f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
+    '''
+    for col_index in range(no_cols):  # Lay tung thuoc tinh
+        proportion[col_index] = []
+        column_value = X_train.iloc[:,col_index]
+        if is_continuous(column_value):
+            for row_index in range(no_rows):
+                for label_index in range(len(np.unique(y_train))):
+                    num1 = 1 / (np.sqrt(2 * pi) * np.sqrt(variance[col_index][label_index]))
+                    num2 = np.power(e, ((-(X_train.iloc[row_index, col_index] - mean[col_index][label_index]) * (X_train.iloc[row_index, col_index] - mean[col_index][label_index])) / (
+                            2 * variance[col_index][label_index])))
+                    fx = num1 * num2
+                    proportion[col_index].append(fx)
+                    #print(fx)
+  
+    return proportion '''
+   
+def gaussian(mean): # lien tuc
+def proportion(): # khong lien tuc
+    
 def main():
     dataset = read_file()
-    # print(dataset)
+    #print(dataset)
     random.seed(0)
     train_data, test_data = train_test_split(dataset, test_size=0.1)
 
@@ -500,9 +506,9 @@ def main():
     y_train = train_data.iloc[:, -1]
     X_train = train_data.iloc[:, :-1]
 
-    mean = cal_mean(X_train, y_train)
-    cal_standardDeviation(X_train, y_train, mean)
-    p = gaussianNB(test_data, 1, 56)
+   # mean = cal_mean(X_train, y_train)
+    #sd=cal_standardDeviation(X_train, y_train)
+    p = cal_proportion(X_train, y_train)
     print(p)
 
     # print(y_test)
@@ -537,13 +543,13 @@ def main():
         3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
     }
     '''
-    tree = decision_tree_classifier(train_data)
-    pprint(tree)
-    y_pred = predict(tree, X_test)
+    #tree = decision_tree_classifier(train_data)
+    #pprint(tree)
+   # y_pred = predict(tree, X_test)
     # print(y_pred)
     # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-    y_test = y_test.tolist()
-    print("Do chinh xac: ", cal_accuracy_all(y_pred,y_test))
+    #y_test = y_test.tolist()
+    #print("Do chinh xac: ", cal_accuracy_all(y_pred,y_test))
     # confusion_matrix(y_test,y_pred,[1.0, 0.0])
 
 
