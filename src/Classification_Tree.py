@@ -368,7 +368,7 @@ def gaussianNB(test_data):
     '''
     mean = {0: [50, 20], 1: [100, 20], 2: [30, 100], 3: [85, 70], 4: [76, 52], 5: [36, 28], 6: [50, 80], 7: [78, 25], 8: [69, 87], 9: [36, 45], 10: [69, 70], 11: [90, 40]}
     standard_deviation = {0: [78, 63], 1: [72, 36], 2: [23, 45], 3: [78, 63], 4: [72, 36], 5: [48, 79], 6: [45, 96], 7: [74, 69], 8: [48, 57], 9: [93, 67], 10: [67, 48], 11: [85, 70]}
-    
+
     label_column = np.unique(test_data.iloc[:, -1])
     proportion = []
     ''' 
@@ -502,8 +502,8 @@ def main():
 
     mean = cal_mean(X_train, y_train)
     cal_standardDeviation(X_train, y_train, mean)
-    p = gaussianNB(test_data, 1, 56)
-    print(p)
+    # p = gaussianNB(test_data, 1, 56)
+    # print(p)
 
     # print(y_test)
     # print(X_test)
