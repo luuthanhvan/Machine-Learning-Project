@@ -16,7 +16,6 @@ def split_data(dataset):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=1/3.0, random_state=100)
     return X, y, X_train, X_test, y_train, y_test
     
-# Decision Tree model
 def train_using_gaussian(X_train, y_train):
     model = GaussianNB()
     # performing training

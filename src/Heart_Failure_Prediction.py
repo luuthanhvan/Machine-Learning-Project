@@ -6,6 +6,9 @@ import array as arr
 from pprint import pprint
 import math
 from collections import deque
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix 
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
@@ -37,9 +40,10 @@ def train_test_split(dataset, test_size):
     if isinstance(test_size, float):
         test_size = round(test_size * len(dataset))  # để đảm bảo test_size luôn là 1 số nguyên
 
-    indices = dataset.index.tolist()  # lấy tất cả các chỉ số trong tập DL gốc, sau đó chuyển nó sang dạng list
-    test_indices = random.sample(population=indices,
-                                 k=test_size)  # random các chỉ số cho tập test, lưu vào mảng test_indices
+    # lấy tất cả các chỉ số trong tập DL gốc, sau đó chuyển nó sang dạng list
+    indices = dataset.index.tolist()
+    # random các chỉ số cho tập test, lưu vào mảng test_indices
+    test_indices = random.sample(population=indices, k=test_size)
     # print(test_indices)
     test_data = dataset.iloc[
         test_indices]  # lấy các giá trị và lưu vào tập DL test thông qua các chỉ số trong mảng test_indices
@@ -52,7 +56,6 @@ def train_test_split(dataset, test_size):
 '''3. Xây dựng cây
 def decision_tree_classifier(dt, counter, min_samples_leaf, max_depth):
     return sub_tree
-
 sub_tree = {"question": ["yes_answer", 
                          "no_answer"]}
                          
@@ -90,8 +93,8 @@ def create_leaf_node(data):
     if check_purity(data) == True:
         leaf_node = np.unique(label_column)[0]
     else:
-        classes, counts_classes = np.unique(label_column,
-                                            return_counts=True)  # lấy giá trị các nhãn duy nhất từ cột nhãn cùng với số lượng nhãn tương ứng
+        # lấy giá trị các nhãn duy nhất từ cột nhãn cùng với số lượng nhãn tương ứng
+        classes, counts_classes = np.unique(label_column, return_counts=True)
         # print(counts_classes)
         # tìm phần tử có số lượng nhãn lớn nhất có trong mảng counts_classes
         maxValue = counts_classes[0]
@@ -350,7 +353,7 @@ def predict_row(tree, row_data_test):
             return tree.get(label)[right]
 
 # Dự đoán nhãn cho tập dữ liệu test
-def predict(tree, data_test):
+def predict_DT(tree, data_test):
     y_pred = []
     for row in range(0, len(data_test)):
         row_data = data_test.iloc[row]
@@ -359,7 +362,7 @@ def predict(tree, data_test):
 
 
 '''5. Tính toán độ chính xác tổng thể'''
-def cal_accuracy_all(y_pred, y_test):
+def cal_accuracy_all_DT(y_pred, y_test):
     correct = 0
     # Lặp tất cả các nhãn trong tập test
     for i in range(0, len(y_test)):
@@ -370,7 +373,7 @@ def cal_accuracy_all(y_pred, y_test):
     return accuracy_score
 
 '''6.Hàm tính độ chính xác cho từng thực thể'''
-def confusion_matrix(y_test, y_pred, label):
+def confusion_matrix_DT(y_test, y_pred, label):
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
     arr = [[]]
     # Tạo từ điển để lưu số lượng dự đoán cho từng label
@@ -403,7 +406,24 @@ def confusion_matrix(y_test, y_pred, label):
     for i in arr:
         print(i)
 
-'''Xây dựng giải thuật Bayes'''
+# Giải thuật Naive Bayes - thư viện sklearn
+def naive_bayes_classifier(X_train, y_train):
+    model = GaussianNB()
+    model.fit(X_train, y_train)
+    return model
+
+def predict_NB(X_test, model):
+    y_pred = model.predict(X_test)
+    return y_pred
+
+# Calculating accuracy
+def cal_accuracy_NB(y_test, y_pred):
+    # Calculating accuracy using confusion matrix
+    print(confusion_matrix(y_test, y_pred, labels=[1, 0]))
+    print("Accuracy is ", accuracy_score(y_test, y_pred)*100)
+
+'''
+#Xây dựng giải thuật Bayes
 def cal_mean(X_train, y_train):
     p = {}
     sum_label = {}
@@ -455,7 +475,7 @@ def cal_variance(X_train, Y_train):
 
     return p
 
-'''
+
 # hàm tính mật độ xác xuất f(x)
 def cal_proportion(X_train,y_train):
     mean = cal_mean(X_train,y_train)
@@ -465,9 +485,9 @@ def cal_proportion(X_train,y_train):
     no_rows, no_cols = X_train.shape
     e = 2.718281
     pi = 3.14
-    ''' 
-        #f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
-    '''
+    
+    #f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
+    
     for col_index in range(no_cols):  # Lay tung thuoc tinh
         proportion[col_index] = []
         column_value = X_train.iloc[:,col_index]
@@ -481,70 +501,81 @@ def cal_proportion(X_train,y_train):
                     proportion[col_index].append(fx)
                     #print(fx)
   
-    return proportion '''
-   
-def gaussian(mean): # lien tuc
-def proportion(): # khong lien tuc
-    
+    return proportion
+'''
+
 def main():
     dataset = read_file()
     #print(dataset)
-    random.seed(0)
-    train_data, test_data = train_test_split(dataset, test_size=0.1)
 
-    # feature_types = determine_type_of_feature(train_data)
-    # print(feature_types)
+    for i in range(11):
+        print(i)
+        random.seed(i)
+        train_data, test_data = train_test_split(dataset, test_size=0.1)
 
-    # print("Train data: ", train_data)
-    # print("Test data: ", test_data)
-    # y_test = test_data.iloc[:,4]
-    # X_test = test_data.iloc[:,0:4]
-    y_test = test_data.iloc[:, -1]  # lấy cột cuối cùng
-    X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
+        # feature_types = determine_type_of_feature(train_data)
+        # print(feature_types)
 
-    y_train = train_data.iloc[:, -1]
-    X_train = train_data.iloc[:, :-1]
+        # print("Train data: ", train_data)
+        # print("Test data: ", test_data)
+        # y_test = test_data.iloc[:,4]
+        # X_test = test_data.iloc[:,0:4]
+        y_test = test_data.iloc[:, -1]  # lấy cột cuối cùng
+        X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
 
-    # print(y_test)
-    # print(X_test)
-    # Test hàm check_purity(data)
-    # print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
-    # dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
-    # print(dt)
-    '''
-    sepalLength  sepalWidth  petalLength  petalWidth      species
-    0          5.1         3.5          1.4         0.2  Iris-setosa
-    1          4.9         3.0          1.4         0.2  Iris-setosa
-    2          4.7         3.2          1.3         0.2  Iris-setosa
-    3          4.6         3.1          1.5         0.2  Iris-setosa
-    4          5.0         3.6          1.4         0.2  Iris-setosa
-    '''
-    # print(check_purity(dt))
-    # kết quả là True, bởi vì 5 phần tử đầu trong tập DL huấn luyện đều có cùng 1 nhãn là Iris-setosa(check_purity(dt))
+        y_train = train_data.iloc[:, -1]
+        X_train = train_data.iloc[:, :-1]
 
-    # Test hàm create_leaf_node()
-    # leaf_node = create_leaf_node(train_data.values)
-    # print(leaf_node)
+        # print(y_test)
+        # print(X_test)
+        # Test hàm check_purity(data)
+        # print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
+        # dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
+        # print(dt)
+        '''
+        sepalLength  sepalWidth  petalLength  petalWidth      species
+        0          5.1         3.5          1.4         0.2  Iris-setosa
+        1          4.9         3.0          1.4         0.2  Iris-setosa
+        2          4.7         3.2          1.3         0.2  Iris-setosa
+        3          4.6         3.1          1.5         0.2  Iris-setosa
+        4          5.0         3.6          1.4         0.2  Iris-setosa
+        '''
+        # print(check_purity(dt))
+        # kết quả là True, bởi vì 5 phần tử đầu trong tập DL huấn luyện đều có cùng 1 nhãn là Iris-setosa(check_purity(dt))
 
-    # Test hàm get_point_splits(data) (t)
-    # point_splits = get_point_splits(train_data.values)
-    # print(point_splits)
-    ''' Result: point_splits = {key: value, } <=> {col_index: [], }
-    {
-        0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
-        1: [2.1, 2.25, 2.3499999999999996, 2.45, 2.55, 2.6500000000000004, 2.75, 2.8499999999999996, 2.95, 3.05, 3.1500000000000004, 3.25, 3.3499999999999996, 3.45, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.300000000000001], 
-        2: [1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.7999999999999998, 2.5999999999999996, 3.4, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.25, 4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.25, 6.5, 6.65, 6.800000000000001], 
-        3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
-    }
-    '''
-    #tree = decision_tree_classifier(train_data)
-    #pprint(tree)
-   # y_pred = predict(tree, X_test)
-    # print(y_pred)
-    # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-    #y_test = y_test.tolist()
-    #print("Do chinh xac: ", cal_accuracy_all(y_pred,y_test))
-    # confusion_matrix(y_test,y_pred,[1.0, 0.0])
+        # Test hàm create_leaf_node()
+        # leaf_node = create_leaf_node(train_data.values)
+        # print(leaf_node)
+
+        # Test hàm get_point_splits(data) (t)
+        # point_splits = get_point_splits(train_data.values)
+        # print(point_splits)
+        ''' Result: point_splits = {key: value, } <=> {col_index: [], }
+        {
+            0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
+            1: [2.1, 2.25, 2.3499999999999996, 2.45, 2.55, 2.6500000000000004, 2.75, 2.8499999999999996, 2.95, 3.05, 3.1500000000000004, 3.25, 3.3499999999999996, 3.45, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.300000000000001], 
+            2: [1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.7999999999999998, 2.5999999999999996, 3.4, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.25, 4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.25, 6.5, 6.65, 6.800000000000001], 
+            3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
+        }
+        '''
+
+        print("Decision Tree")
+        tree = decision_tree_classifier(train_data)
+        #pprint(tree)
+        y_pred = predict_DT(tree, X_test)
+        # print(y_pred)
+        # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
+        y_test = y_test.tolist()
+        print("Do chinh xac: ", cal_accuracy_all_DT(y_pred,y_test))
+        confusion_matrix_DT(y_test,y_pred,[1.0, 0.0])
+        print("===========================================")
+
+
+        print("Naive Bayes")
+        model = naive_bayes_classifier(X_train, y_train)
+        y_pred = predict_NB(X_test, model)
+        cal_accuracy_NB(y_test, y_pred)
+        print("===========================================")
 
 
 # gọi hàm main
