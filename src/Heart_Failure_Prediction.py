@@ -8,7 +8,7 @@ import math
 from collections import deque
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix 
+from sklearn.metrics import confusion_matrix
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
@@ -294,10 +294,12 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
         # tạo cây con
         feature_name = COLUMN_HEADERS[split_column] # tên thuộc tính
         type_of_feature = FEATURE_TYPES[split_column]
+        
         if type_of_feature == "continuous":
-            question = "{} <= {}".format(feature_name, split_value) # điều kiện
+            question = "{} <= {}".format(feature_name, split_value) # tạo nút điều kiện
         else:
             question = "{} < {}".format(feature_name, split_value)
+        
         sub_tree = {question: []}
         
         # lặp lại việc phân hoạch 1 cách đệ quy cho cây con trái và phải
@@ -383,6 +385,7 @@ def confusion_matrix_DT(y_test, y_pred, label):
     t = 0
     # Lặp lần lượt các nhãn có trong tập dữ liệu test
     for i in np.unique(y_test):
+        arr[t] = []
         # Khởi tạo giá trị ban đầu cho từng label = 0
         for e in label:
             correct[e] = 0
@@ -397,12 +400,17 @@ def confusion_matrix_DT(y_test, y_pred, label):
                     if key == y_pred[j]:
                         # Tang gia tri y_pred cho nhan = key
                         correct[key] = correct[key] + 1
+        
+        # print(correct)
+        arr[t].append(correct)
         # Add gia tri từng label vào ma trận dự đoán
         for key in correct.keys():
             arr[t].append(correct[key])
         t += 1
         arr.append([])
+    # print(correct)
     arr.pop()
+    # print(arr)
     for i in arr:
         print(i)
 
@@ -422,95 +430,13 @@ def cal_accuracy_NB(y_test, y_pred):
     print(confusion_matrix(y_test, y_pred, labels=[1, 0]))
     print("Accuracy is ", accuracy_score(y_test, y_pred)*100)
 
-'''
-#Xây dựng giải thuật Bayes
-def cal_mean(X_train, y_train):
-    p = {}
-    sum_label = {}
-    n = {}
-    label = np.unique(y_train)
-    # print(label)
-    no_rows, no_cols = X_train.shape
-    for col_index in range(no_cols):  # Lay tung thuoc tinh
-        column_value = X_train.iloc[:,col_index]
-        if is_continuous(column_value):
-            p[col_index] = []
-            for i in range(len(label)):  # Xet bien sum cho tung label
-                sum_label[i] = 0.0
-                n[i] = 0
-            for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
-                for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
-                    if y_train.iloc[row_index] == label[key]:
-                        sum_label[key] = sum_label[key] + X_train.iloc[row_index, col_index]  # Tinh tong
-                        n[key] = n[key] + 1
-            for i in range(len(label)):
-                p[col_index].append(sum_label[i] / n[i])
-    return p
-
-
-def cal_variance(X_train, Y_train):
-    no_rows, no_cols = X_train.shape
-    n = {}
-    p = {}
-    sum = {}
-    binhphuong = {}
-    label = np.unique(Y_train)
-    mean = cal_mean(X_train,Y_train)
-    for col_index in range(no_cols):  # Lay tung thuoc tinh
-        column_value = X_train.iloc[:,col_index]
-        if is_continuous(column_value):
-            values = mean[col_index]
-            p[col_index] = []
-            for i in range(len(label)):
-                sum[i] = 0.0
-                n[i] = 0
-            for row_index in range(no_rows):  # Duyet lan luot tat ca cac dong trong tung thuoc tinh
-                for key in range(len(label)):  # Lay lan luot tung nhan de so sanh
-                    if Y_train.iloc[row_index] == label[key]:
-                        binhphuong[key] = math.pow(X_train.iloc[row_index, col_index] - values[key], 2)  # binh phuong
-                        sum[key] = sum[key] + binhphuong[key]  # Tong cac binh phuong
-                        n[key] = n[key] + 1
-            for i in range(len(label)):
-                p[col_index].append(sum[i] / (n[i] - 1))
-
-    return p
-
-
-# hàm tính mật độ xác xuất f(x)
-def cal_proportion(X_train,y_train):
-    mean = cal_mean(X_train,y_train)
-    #print(mean)
-    variance = cal_variance(X_train,y_train)
-    proportion = {}
-    no_rows, no_cols = X_train.shape
-    e = 2.718281
-    pi = 3.14
-    
-    #f(x) = 1 / (sqrt(2*pi) * sqrt(standard deviation)) * e ^ -(x-u)(x-u)/2*standard deviation
-    
-    for col_index in range(no_cols):  # Lay tung thuoc tinh
-        proportion[col_index] = []
-        column_value = X_train.iloc[:,col_index]
-        if is_continuous(column_value):
-            for row_index in range(no_rows):
-                for label_index in range(len(np.unique(y_train))):
-                    num1 = 1 / (np.sqrt(2 * pi) * np.sqrt(variance[col_index][label_index]))
-                    num2 = np.power(e, ((-(X_train.iloc[row_index, col_index] - mean[col_index][label_index]) * (X_train.iloc[row_index, col_index] - mean[col_index][label_index])) / (
-                            2 * variance[col_index][label_index])))
-                    fx = num1 * num2
-                    proportion[col_index].append(fx)
-                    #print(fx)
-  
-    return proportion
-'''
-
 def main():
     dataset = read_file()
     #print(dataset)
 
     for i in range(11):
         print(i)
-        random.seed(i)
+        random.seed(0)
         train_data, test_data = train_test_split(dataset, test_size=0.1)
 
         # feature_types = determine_type_of_feature(train_data)
@@ -562,19 +488,19 @@ def main():
         print("Decision Tree")
         tree = decision_tree_classifier(train_data)
         #pprint(tree)
-        y_pred = predict_DT(tree, X_test)
+        y_pred_DT = predict_DT(tree, X_test)
         # print(y_pred)
         # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-        y_test = y_test.tolist()
-        print("Do chinh xac: ", cal_accuracy_all_DT(y_pred,y_test))
-        confusion_matrix_DT(y_test,y_pred,[1.0, 0.0])
+        y_test_DT = y_test.tolist()
+        # print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
+        confusion_matrix_DT(y_test_DT, y_pred_DT ,[1, 0])
         print("===========================================")
 
 
         print("Naive Bayes")
         model = naive_bayes_classifier(X_train, y_train)
-        y_pred = predict_NB(X_test, model)
-        cal_accuracy_NB(y_test, y_pred)
+        y_pred_NB = predict_NB(X_test, model)
+        cal_accuracy_NB(y_test, y_pred_NB)
         print("===========================================")
 
 
