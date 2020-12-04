@@ -6,11 +6,6 @@ import array as arr
 from pprint import pprint
 import math
 from collections import deque
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
@@ -22,50 +17,10 @@ def read_file():
     return dataset
 '''
 def read_file():
-    # dataset = pd.read_csv("../data_set/iris_data.csv", delimiter=",")
+    # dataset = pd.read_csv("../data_set/test1.csv", delimiter=",")
     dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
-'''
-2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
-- Input:
-    + dataset: tập dữ liệu đọc từ file
-    + test_size: kích thước tập dữ liệu kiểm tra
-- Output:
-	+ train_data: tập dữ liệu huấn luyện
-	+ test_data: tập dữ liệu kiểm tra
-import random
-def train_test_split(dataset, test_size):
-    return train_data, test_data
-'''
-def train_test_split(dataset, test_size):
-    if isinstance(test_size, float):
-        test_size = round(test_size * len(dataset))  # để đảm bảo test_size luôn là 1 số nguyên
-
-    # lấy tất cả các chỉ số trong tập DL gốc, sau đó chuyển nó sang dạng list
-    indices = dataset.index.tolist()
-    # random các chỉ số cho tập test, lưu vào mảng test_indices
-    test_indices = random.sample(population=indices, k=test_size)
-    # print(test_indices)
-    test_data = dataset.iloc[
-        test_indices]  # lấy các giá trị và lưu vào tập DL test thông qua các chỉ số trong mảng test_indices
-    train_data = dataset.drop(
-        test_indices)  # lấy các giá trị bỏ đi các chỉ số trong mảng test_indices và lưu vào tập DL train
-
-    return train_data, test_data
-
-
-'''3. Xây dựng cây
-def decision_tree_classifier(dt, counter, min_samples_leaf, max_depth):
-    return sub_tree
-sub_tree = {"question": ["yes_answer", 
-                         "no_answer"]}
-                         
-example_tree = {'petal_width <= 0.8': ['Iris-setosa',
-                        {'petal_width <= 1.65': [{'petal_length <= 4.95': ['Iris-versicolor',
-                                                                           'Iris-virginica']},
-                                                 'Iris-virginica']}]}
-'''
 # hàm kiểm tra dữ liệu trong 1 nút có thuần nhấy hay không
 # một nút được xem là có DL thuần nhất khi nút đó chỉ chứa duy nhất 1 nhãn
 def check_purity(data):
@@ -109,88 +64,53 @@ def create_leaf_node(data):
 
     return leaf_node
 
-def get_point_splits(data):
+def get_point_splits_2(data):
     point_splits = {} # khởi tạo 1 từ điển rỗng
-    '''
-    Kiểu từ điển (dictionary) là các phần tử của nó được biểu diễn dưới dạng {key: value}
-    Ta có thể truy xuất giá trị của 1 phần tử trong từ điển thông qua key
-    Trong từ điển, value của 1 key có thể là 1 số, chuỗi, list hoặc 1 từ điển...
-    Ví dụ: 
-    - Khởi tạo 1 từ điển gồm 3 phần tử  như sau:
-        student_info = {
-            fullname: "Luu Thanh Van",
-            age: 21,
-            major: "Computer Science"
-        }
-    - Truy xuất:
-        student_name = student_info["fullname"] -> result: Luu Thanh Van
     
-    Trong hàm này, potential_splits có dạng {col_index: []}
-    - col_index: chỉ số cột
-    - []: mình sẽ xác định tất cả các điểm phân hoạch trong một cột = (giá trị hiện tại + giá trị trước đó)/2 và lưu vào mảng này
-    '''
     # lấy hình dạng của dữ liệu, shape sẽ trả về 2 giá trị: giá trị đầu tiên là tổng số  hàng (no_rows), giá trị thứ hai là tổng số cột (no_cols)
     no_rows, no_cols = data.shape
     
     # duyệt qua các cột trong data
     for col_index in range(no_cols - 1):
+        # col_index là các key trong point_splits
+        # khởi tạo giá trị tại key = col_index là 1 mảng rỗng
+        point_splits[col_index] = []
+        
         # lấy các giá trị trong 1 cột (col_index sẽ chạy từ 0,1, đến no_cols-1)
         column_values = data[:, col_index]
         
         unique_column_values = np.unique(column_values) # loại bỏ các giá trị trùng
-        type_of_feature = FEATURE_TYPES[col_index]
-        if type_of_feature == "continuous":
-            # col_index là các key trong point_splits
-            # khởi tạo giá trị tại key = col_index là 1 mảng rỗng
-            point_splits[col_index] = []
-            
-            for index in range(len(unique_column_values)):
-                # dòng này để tránh index = 0, mình sẽ chạy từ index = 1
-                # vì mình cần lấy giá trị trước đó + giá trị hiện tại, mà tại index = 0 thì không có giá trị trước nó
-                if index != 0:
-                    # lấy giá trị hiện tại trong mảng unique_column_values
-                    current_value = unique_column_values[index]
-                    # lấy giá trị trước đó trong mảng unique_column_values
-                    previous_value = unique_column_values[index - 1]
-                    # xác định điểm phân hoạch
-                    point_split = (current_value + previous_value) / 2 # công thức này tham khảo trên mạng
-                    # thêm điểm phân hoạch vào mảng, tại vị trí col_index
-                    point_splits[col_index].append(point_split)
 
-        elif len(unique_column_values) > 1:
-            point_splits[col_index] = unique_column_values
+        for index in range(len(unique_column_values)):
+            # dòng này để tránh index = 0, mình sẽ chạy từ index = 1
+            # vì mình cần lấy giá trị trước đó + giá trị hiện tại, mà tại index = 0 thì không có giá trị trước nó
+            if index != 0:
+                # lấy giá trị hiện tại trong mảng unique_column_values
+                current_value = unique_column_values[index]
+                # lấy giá trị trước đó trong mảng unique_column_values
+                previous_value = unique_column_values[index - 1]
+                # xác định điểm phân hoạch
+                point_split = (current_value + previous_value) / 2 # công thức này tham khảo trên mạng
+                # thêm điểm phân hoạch vào mảng, tại vị trí col_index
+                point_splits[col_index].append(point_split)
+    
     # xem cụ thể output ở phần test hàm này bên dưới nhe
     return point_splits
 
-def get_point_splits_2(data):
+def get_point_splits(data):
     point_splits = {}
     no_rows, no_cols = data.shape
-    # print(no_cols)
+    for col_index in range(no_cols-1):
+        point_splits[col_index] = []
+        for row_index in range(no_rows):
+            if row_index != 0:
+                current_column_class = data[row_index, -1]
+                previous_column_class = data[row_index-1, -1]
 
-    for column_index in range(no_cols-1):
-        column_values = data[:, column_index]
-        unique_column_values = np.unique(column_values) # loại bỏ các giá trị trùng
+                if current_column_class != previous_column_class:
+                    column_value = data[row_index, col_index]
+                    point_splits[col_index].append(column_value)
 
-        type_of_feature = FEATURE_TYPES[column_index]
-
-        if type_of_feature == "continuous":
-            point_splits[column_index] = []
-            for row_index in range(no_rows):
-                if row_index != 0 and row_index != no_rows-1: # không xét dòng thứ 0 và dòng cuối cùng
-                    
-                    previous_class_value = data[row_index-1, -1] 
-                    current_class_value = data[row_index, -1]
-                    next_class_value = data[row_index+1, -1]
-
-                    # nếu mà giá trị nhãn hiện tại khác với giá trị nhãn trước và sau đó thì chọn điểm hiện tại là điểm phân hoạch
-                    if current_class_value != previous_class_value and current_class_value != next_class_value:
-                        column_value = data[row_index, column_index]
-                        point_splits[column_index].append(column_value)
-        
-        # feature is categorical
-        else:
-            point_splits[column_index] = unique_column_values
-    
     # print(point_splits)
     return point_splits
 
@@ -198,13 +118,13 @@ def get_point_splits_2(data):
 def binary_split_data(data, split_column, split_value):
     split_column_values = data[:, split_column]
     # print(split_column_value)
-    type_of_feature = FEATURE_TYPES[split_column]
-    if type_of_feature == "continuous":
-        left = data[split_column_values <= split_value]
-        right = data[split_column_values > split_value]
-    else:
-        left = data[split_column_values == split_value]
-        right = data[split_column_values != split_value]
+    # type_of_feature = FEATURE_TYPES[split_column]
+    # if type_of_feature == "continuous":
+    # left = data[split_column_values >= split_value]
+    # right = data[split_column_values < split_value]
+    # else:
+    left = data[split_column_values == split_value]
+    right = data[split_column_values != split_value]
     
     return left, right
 
@@ -447,18 +367,58 @@ def cal_accuracy_NB(y_test, y_pred):
     print("Accuracy is ", accuracy_score(y_test, y_pred)*100)
 
 def main():
+    # dataset = read_file()
+    # print(dataset)
+    # point_split = get_point_splits(dataset.values)
+    # print(point_split[4])
+    # left, right = binary_split_data(dataset.values, 9, point_split[9][0])
+    # print(left)
+    # print(right)
+    # print(info(left))
+    # print(info_A(left, right))
+
+    # tree = decision_tree_classifier(dataset, max_depth=10)
+    # print(tree)
     dataset = read_file()
     #print(dataset)
-    # random.seed(0)
-    # train_data, test_data = train_test_split(dataset, test_size=0.1)
 
-    # points_split = get_point_splits(train_data.iloc[0: 30, :].values)
-    # print("\n\n")
-    # # print(train_data.iloc[0: 30, :])
-    # print(points_split)
-    # print("\n\n")
-    
-    for i in range(21):
+    for i in range(11):
+        print(i)
+        random.seed(i)
+        train_data, test_data = train_test_split(dataset, test_size=0.1)
+
+        y_test = test_data.iloc[:, -1]  # lấy cột cuối cùng
+        X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
+
+        y_train = train_data.iloc[:, -1]
+        X_train = train_data.iloc[:, :-1]
+
+
+        print("Decision Tree")
+        tree = decision_tree_classifier(train_data, max_depth=11)
+        #pprint(tree)
+        y_pred_DT = predict_DT(tree, X_test)
+        # print(y_pred)
+        # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
+        y_test_DT = y_test.tolist()
+        print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
+        confusion_matrix_DT(y_test_DT, y_pred_DT ,[0, 1])
+        print("===========================================")
+
+        print("Naive Bayes")
+        model = naive_bayes_classifier(X_train, y_train)
+        y_pred_NB = predict_NB(X_test, model)
+        cal_accuracy_NB(y_test, y_pred_NB)
+        print("===========================================")
+
+
+# gọi hàm main
+if __name__ == "__main__":
+    main()
+
+
+    '''
+    for i in range(11):
         print(i)
         random.seed(i)
         train_data, test_data = train_test_split(dataset, test_size=0.1)
@@ -508,10 +468,10 @@ def main():
             3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
         }
         '''
-        
+        '''
         print("Decision Tree")
         tree = decision_tree_classifier(train_data, max_depth=11)
-        # pprint(tree)
+        #pprint(tree)
         y_pred_DT = predict_DT(tree, X_test)
         # print(y_pred)
         # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
@@ -524,10 +484,4 @@ def main():
         model = naive_bayes_classifier(X_train, y_train)
         y_pred_NB = predict_NB(X_test, model)
         cal_accuracy_NB(y_test, y_pred_NB)
-        print("===========================================")
-    
-
-
-# gọi hàm main
-if __name__ == "__main__":
-    main()
+        print("===========================================")'''
