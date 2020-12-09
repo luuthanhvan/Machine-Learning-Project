@@ -1,4 +1,5 @@
 import csv
+import time
 import random
 import pandas as pd
 import numpy as np
@@ -51,7 +52,6 @@ def train_test_split(dataset, test_size):
         test_indices]  # lấy các giá trị và lưu vào tập DL test thông qua các chỉ số trong mảng test_indices
     train_data = dataset.drop(
         test_indices)  # lấy các giá trị bỏ đi các chỉ số trong mảng test_indices và lưu vào tập DL train
-
     return train_data, test_data
 
 
@@ -396,6 +396,7 @@ def cal_accuracy_all_DT(y_pred, y_test):
 
 '''6.Hàm tính độ chính xác cho từng thực thể'''
 def confusion_matrix_DT(y_test, y_pred, label):
+    #print(y_test,"\n",y_pred)
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
     arr = [[]]
     # Tạo từ điển để lưu số lượng dự đoán cho từng label
@@ -404,19 +405,20 @@ def confusion_matrix_DT(y_test, y_pred, label):
     correct = {}
     t = 0
     # Lặp lần lượt các nhãn có trong tập dữ liệu test
-    for i in np.unique(y_test):
+    for i in label:
         # Khởi tạo giá trị ban đầu cho từng label = 0
         for e in label:
             correct[e] = 0
+    
         lb = i
         # Duỵet lần lượt tất cả cac nhãn trong tập test
         for j in range(0, len(y_test)):
             # Chi thực hiện kiểm tra nếu nhan phan trong tập test là label đang xét
             if y_test[j] == lb:
-
                 for key in correct.keys():
                     # Tinh do chinh xac va sai  cho từng label  trong tung lop
                     if key == y_pred[j]:
+                    
                         # Tang gia tri y_pred cho nhan = key
                         correct[key] = correct[key] + 1
         # Add gia tri từng label vào ma trận dự đoán
@@ -457,11 +459,16 @@ def main():
     # # print(train_data.iloc[0: 30, :])
     # print(points_split)
     # print("\n\n")
-    
-    for i in range(21):
+    time1 = []
+    time2 = []
+    phantram1 = []
+    phantram2 = []
+    z = []
+    i=0
+    for i in range(15):
         print(i)
         random.seed(i)
-        train_data, test_data = train_test_split(dataset, test_size=0.1)
+        train_data, test_data = train_test_split(dataset, test_size=1/3.0)
 
         # feature_types = determine_type_of_feature(train_data)
         # print(feature_types)
@@ -476,8 +483,8 @@ def main():
         y_train = train_data.iloc[:, -1]
         X_train = train_data.iloc[:, :-1]
 
-        # print(y_test)
-        # print(X_test)
+        #print(y_test)
+        #print(X_test)
         # Test hàm check_purity(data)
         # print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
         # dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
@@ -512,19 +519,48 @@ def main():
         print("Decision Tree")
         tree = decision_tree_classifier(train_data, max_depth=11)
         # pprint(tree)
+        seconds = time.time()
         y_pred_DT = predict_DT(tree, X_test)
+        time1.append(time.time()-seconds)
         # print(y_pred)
         # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
         y_test_DT = y_test.tolist()
         print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
-        confusion_matrix_DT(y_test_DT, y_pred_DT ,[0, 1])
+        phantram1.append(cal_accuracy_all_DT(y_pred_DT, y_test_DT))
+        confusion_matrix_DT(y_test_DT, y_pred_DT ,[1, 0])
         print("===========================================")
 
         print("Naive Bayes")
         model = naive_bayes_classifier(X_train, y_train)
+        seconds = time.time()
         y_pred_NB = predict_NB(X_test, model)
+        time2.append(time.time()-seconds)
         cal_accuracy_NB(y_test, y_pred_NB)
+        phantram2.append(accuracy_score(y_test, y_pred_NB)*100)
         print("===========================================")
+        z.append(i+1)
+        i+=1
+    
+    print("\n\nBảng thống kê độ chính xác và thời gian của 2 giải thuật\n")
+    print("|---|---------------------|-------------------------------------------------|")
+    print("|   |          Độ chính xác             |             Thời gian             |")
+    print("|STT|-----------------------------------|-----------------------------------|")
+    print("|   |  Decision Tree  |   Naive Bayes   |  Decision Tree  |   Naive Bayes   |")
+    print("|---|-----------------|-----------------|-----------------|-----------------|")
+    for i in range(len(phantram1)):
+        print("|",'{0:3d}'.format(i+1),"|",'{0:17.5f}'.format(phantram1[i]),"|",'{0:17.5f}'.format(phantram2[i]),"|",'{0:17.5f}'.format(time1[i]),"|",'{0:17.5f}'.format(time2[i]),"|",sep='')
+        print("|---|-----------------|-----------------|-----------------|-----------------|")
+    print("\nĐộ chính và thời gian trung bình của giải thuật cây quyết định là:",'{0:10.5f}'.format(sum(phantram1)/len(phantram1)),'{0:10.5f}'.format(sum(time1)/len(time1)))
+    print("\nĐộ chính và thời gian trung bình của giải thuật Bayes là:",'{0:10.5f}'.format(sum(phantram2)/len(phantram2)),'{0:10.5f}'.format(sum(time2)/len(time2)))
+
+    import matplotlib.pyplot as plt
+    plt.axis([0,15,65,100])
+    plt.plot(z,phantram1,color="blue")
+    plt.plot(z,phantram2,color="red")
+    plt.xlabel("Lần lặp")
+    plt.ylabel("Độ chính xác")
+    plt.show()
+
     
 
 
