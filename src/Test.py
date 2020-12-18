@@ -1,4 +1,5 @@
 import csv
+import time
 import random
 import pandas as pd
 import numpy as np
@@ -6,6 +7,11 @@ import array as arr
 from pprint import pprint
 import math
 from collections import deque
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
@@ -17,11 +23,51 @@ def read_file():
     return dataset
 '''
 def read_file():
-    # dataset = pd.read_csv("../data_set/test1.csv", delimiter=",")
-    dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
+    # dataset = pd.read_csv("../data_set/iris_data.csv", delimiter=",")
+    dataset = pd.read_csv("../data_set/test1.csv", delimiter=",")
+    # dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
-# hàm kiểm tra dữ liệu trong 1 nút có thuần nhấy hay không
+'''
+2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
+- Input:
+    + dataset: tập dữ liệu đọc từ file
+    + test_size: kích thước tập dữ liệu kiểm tra
+- Output:
+	+ train_data: tập dữ liệu huấn luyện
+	+ test_data: tập dữ liệu kiểm tra
+import random
+def train_test_split(dataset, test_size):
+    return train_data, test_data
+'''
+def train_test_split(dataset, test_size):
+    if isinstance(test_size, float):
+        test_size = round(test_size * len(dataset))  # để đảm bảo test_size luôn là 1 số nguyên
+
+    # lấy tất cả các chỉ số trong tập DL gốc, sau đó chuyển nó sang dạng list
+    indices = dataset.index.tolist()
+    # random các chỉ số cho tập test, lưu vào mảng test_indices
+    test_indices = random.sample(population=indices, k=test_size)
+    # print(test_indices)
+    test_data = dataset.iloc[
+        test_indices]  # lấy các giá trị và lưu vào tập DL test thông qua các chỉ số trong mảng test_indices
+    train_data = dataset.drop(
+        test_indices)  # lấy các giá trị bỏ đi các chỉ số trong mảng test_indices và lưu vào tập DL train
+    return train_data, test_data
+
+
+'''3. Xây dựng cây
+def decision_tree_classifier(dt, counter, min_samples_leaf, max_depth):
+    return sub_tree
+sub_tree = {"question": ["yes_answer", 
+                         "no_answer"]}
+                         
+example_tree = {'petal_width <= 0.8': ['Iris-setosa',
+                        {'petal_width <= 1.65': [{'petal_length <= 4.95': ['Iris-versicolor',
+                                                                           'Iris-virginica']},
+                                                 'Iris-virginica']}]}
+'''
+# hàm kiểm tra dữ liệu trong 1 nút có thuần nhất hay không
 # một nút được xem là có DL thuần nhất khi nút đó chỉ chứa duy nhất 1 nhãn
 def check_purity(data):
     label_column = data[:, -1]  # lấy nguyên cột nhãn trong data
@@ -40,7 +86,6 @@ def check_purity(data):
         return True
     else:
         return False
-
 
 # hàm tạo nút lá
 def create_leaf_node(data):
@@ -64,53 +109,33 @@ def create_leaf_node(data):
 
     return leaf_node
 
-def get_point_splits_2(data):
-    point_splits = {} # khởi tạo 1 từ điển rỗng
-    
-    # lấy hình dạng của dữ liệu, shape sẽ trả về 2 giá trị: giá trị đầu tiên là tổng số  hàng (no_rows), giá trị thứ hai là tổng số cột (no_cols)
-    no_rows, no_cols = data.shape
-    
-    # duyệt qua các cột trong data
-    for col_index in range(no_cols - 1):
-        # col_index là các key trong point_splits
-        # khởi tạo giá trị tại key = col_index là 1 mảng rỗng
-        point_splits[col_index] = []
-        
-        # lấy các giá trị trong 1 cột (col_index sẽ chạy từ 0,1, đến no_cols-1)
-        column_values = data[:, col_index]
-        
-        unique_column_values = np.unique(column_values) # loại bỏ các giá trị trùng
-
-        for index in range(len(unique_column_values)):
-            # dòng này để tránh index = 0, mình sẽ chạy từ index = 1
-            # vì mình cần lấy giá trị trước đó + giá trị hiện tại, mà tại index = 0 thì không có giá trị trước nó
-            if index != 0:
-                # lấy giá trị hiện tại trong mảng unique_column_values
-                current_value = unique_column_values[index]
-                # lấy giá trị trước đó trong mảng unique_column_values
-                previous_value = unique_column_values[index - 1]
-                # xác định điểm phân hoạch
-                point_split = (current_value + previous_value) / 2 # công thức này tham khảo trên mạng
-                # thêm điểm phân hoạch vào mảng, tại vị trí col_index
-                point_splits[col_index].append(point_split)
-    
-    # xem cụ thể output ở phần test hàm này bên dưới nhe
-    return point_splits
-
 def get_point_splits(data):
     point_splits = {}
     no_rows, no_cols = data.shape
-    for col_index in range(no_cols-1):
-        point_splits[col_index] = []
-        for row_index in range(no_rows):
-            if row_index != 0:
-                current_column_class = data[row_index, -1]
-                previous_column_class = data[row_index-1, -1]
 
-                if current_column_class != previous_column_class:
-                    column_value = data[row_index, col_index]
-                    point_splits[col_index].append(column_value)
+    for column_index in range(no_cols-1):
+        column_values = data[:, column_index]
+        # print(column_values)
+        unique_column_values = np.unique(column_values) # loại bỏ các giá trị trùng
 
+        type_of_feature = FEATURE_TYPES[column_index]
+
+        if type_of_feature == "continuous":
+            point_splits[column_index] = []
+            for row_index in range(no_rows-1):
+                if row_index != 0: # không xét dòng thứ 0 và dòng cuối cùng
+                    previous_class_value = data[row_index-1, -1]
+                    current_class_value = data[row_index, -1]
+
+                    # nếu mà giá trị nhãn hiện tại khác với giá trị nhãn trước và sau đó thì chọn điểm hiện tại là điểm phân hoạch
+                    if current_class_value != previous_class_value:
+                        column_value = data[row_index, column_index]
+                        point_splits[column_index].append(column_value)
+        
+        # feature is categorical
+        else:
+            point_splits[column_index] = unique_column_values
+    
     # print(point_splits)
     return point_splits
 
@@ -118,13 +143,13 @@ def get_point_splits(data):
 def binary_split_data(data, split_column, split_value):
     split_column_values = data[:, split_column]
     # print(split_column_value)
-    # type_of_feature = FEATURE_TYPES[split_column]
-    # if type_of_feature == "continuous":
-    # left = data[split_column_values >= split_value]
-    # right = data[split_column_values < split_value]
-    # else:
-    left = data[split_column_values == split_value]
-    right = data[split_column_values != split_value]
+    type_of_feature = FEATURE_TYPES[split_column]
+    if type_of_feature == "continuous":
+        left = data[split_column_values <= split_value]
+        right = data[split_column_values > split_value]
+    else:
+        left = data[split_column_values == split_value]
+        right = data[split_column_values != split_value]
     
     return left, right
 
@@ -156,7 +181,6 @@ def info_A(left, right):
     overall_entropy = ((D1 / D) * info(left)) + ((D2 / D) * info(right))
 
     return overall_entropy
-
 
 # Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
 def choose_best_split(data, point_splits):
@@ -215,16 +239,21 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
     # trường hợp để dừng phân hoạch
     if (check_purity(data)) or (len(data) < min_samples_leaf) or (counter == max_depth):
         leaf_node = create_leaf_node(data)
+        # print(leaf_node)
         return leaf_node
     
     else:    
         counter += 1
         # tìm các điểm phân hoạch trên toàn bộ tập DL truyền vào (data)
         point_splits = get_point_splits(data)
+        # print("Các điểm phân hoạch:\n", point_splits)
         # chọn thuộc tính và giá trị của thuộc tính để phân hoạch
         split_column, split_value = choose_best_split(data, point_splits)
+        # print(split_column, split_value)
         # phân hoạch nhị phân tập DL ta thành 2 cây con trái và phải dựa trên thuộc tính và giá trị của thuộc tính đó vừa tìm được ở trên
         left, right = binary_split_data(data, split_column, split_value)
+
+        print(left)
         
         # kiểm tra dữ liệu rỗng
         if len(left) == 0 or len(right) == 0:
@@ -238,7 +267,7 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
         if type_of_feature == "continuous":
             question = "{} <= {}".format(feature_name, split_value) # tạo nút điều kiện
         else:
-            question = "{} < {}".format(feature_name, split_value)
+            question = "{} = {}".format(feature_name, split_value)
         
         sub_tree = {question: []}
         
@@ -316,6 +345,7 @@ def cal_accuracy_all_DT(y_pred, y_test):
 
 '''6.Hàm tính độ chính xác cho từng thực thể'''
 def confusion_matrix_DT(y_test, y_pred, label):
+    #print(y_test,"\n",y_pred)
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
     arr = [[]]
     # Tạo từ điển để lưu số lượng dự đoán cho từng label
@@ -324,19 +354,20 @@ def confusion_matrix_DT(y_test, y_pred, label):
     correct = {}
     t = 0
     # Lặp lần lượt các nhãn có trong tập dữ liệu test
-    for i in np.unique(y_test):
+    for i in label:
         # Khởi tạo giá trị ban đầu cho từng label = 0
         for e in label:
             correct[e] = 0
+    
         lb = i
         # Duỵet lần lượt tất cả cac nhãn trong tập test
         for j in range(0, len(y_test)):
             # Chi thực hiện kiểm tra nếu nhan phan trong tập test là label đang xét
             if y_test[j] == lb:
-
                 for key in correct.keys():
                     # Tinh do chinh xac va sai  cho từng label  trong tung lop
                     if key == y_pred[j]:
+                    
                         # Tang gia tri y_pred cho nhan = key
                         correct[key] = correct[key] + 1
         # Add gia tri từng label vào ma trận dự đoán
@@ -350,138 +381,20 @@ def confusion_matrix_DT(y_test, y_pred, label):
     for i in arr:
         print(i)
 
-# Giải thuật Naive Bayes - thư viện sklearn
-def naive_bayes_classifier(X_train, y_train):
-    model = GaussianNB()
-    model.fit(X_train, y_train)
-    return model
-
-def predict_NB(X_test, model):
-    y_pred = model.predict(X_test)
-    return y_pred
-
-# Calculating accuracy
-def cal_accuracy_NB(y_test, y_pred):
-    # Calculating accuracy using confusion matrix
-    print(confusion_matrix(y_test, y_pred, labels=[1, 0]))
-    print("Accuracy is ", accuracy_score(y_test, y_pred)*100)
-
 def main():
-    # dataset = read_file()
-    # print(dataset)
-    # point_split = get_point_splits(dataset.values)
-    # print(point_split[4])
-    # left, right = binary_split_data(dataset.values, 9, point_split[9][0])
-    # print(left)
-    # print(right)
-    # print(info(left))
-    # print(info_A(left, right))
-
-    # tree = decision_tree_classifier(dataset, max_depth=10)
-    # print(tree)
     dataset = read_file()
-    #print(dataset)
+    print(dataset)
+    # print(is_continuous(dataset.iloc[:, 0]))
+    # point_splits = get_point_splits(dataset.values)
 
-    for i in range(11):
-        print(i)
-        random.seed(i)
-        train_data, test_data = train_test_split(dataset, test_size=0.1)
+    # print(point_splits)
 
-        y_test = test_data.iloc[:, -1]  # lấy cột cuối cùng
-        X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
+    # print(info(dataset.values)) # 1.0
 
-        y_train = train_data.iloc[:, -1]
-        X_train = train_data.iloc[:, :-1]
-
-
-        print("Decision Tree")
-        tree = decision_tree_classifier(train_data, max_depth=11)
-        #pprint(tree)
-        y_pred_DT = predict_DT(tree, X_test)
-        # print(y_pred)
-        # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-        y_test_DT = y_test.tolist()
-        print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
-        confusion_matrix_DT(y_test_DT, y_pred_DT ,[0, 1])
-        print("===========================================")
-
-        print("Naive Bayes")
-        model = naive_bayes_classifier(X_train, y_train)
-        y_pred_NB = predict_NB(X_test, model)
-        cal_accuracy_NB(y_test, y_pred_NB)
-        print("===========================================")
+    # tree = decision_tree_classifier(dataset, max_depth=11)
+    # pprint(tree)
 
 
 # gọi hàm main
 if __name__ == "__main__":
     main()
-
-
-    '''
-    for i in range(11):
-        print(i)
-        random.seed(i)
-        train_data, test_data = train_test_split(dataset, test_size=0.1)
-
-        # feature_types = determine_type_of_feature(train_data)
-        # print(feature_types)
-
-        # print("Train data: ", train_data)
-        # print("Test data: ", test_data)
-        # y_test = test_data.iloc[:,4]
-        # X_test = test_data.iloc[:,0:4]
-        y_test = test_data.iloc[:, -1]  # lấy cột cuối cùng
-        X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
-
-        y_train = train_data.iloc[:, -1]
-        X_train = train_data.iloc[:, :-1]
-
-        # print(y_test)
-        # print(X_test)
-        # Test hàm check_purity(data)
-        # print(check_purity(train_data.values)) # kết quả là False, bởi vì giá trị nhãn trong tập DL train bao gồm 3 nhãn -> chưa thuần nhất
-        # dt = train_data.head().values # lấy 5 giá trị đầu tiên trong tập DL train
-        # print(dt)'''
-        '''
-        sepalLength  sepalWidth  petalLength  petalWidth      species
-        0          5.1         3.5          1.4         0.2  Iris-setosa
-        1          4.9         3.0          1.4         0.2  Iris-setosa
-        2          4.7         3.2          1.3         0.2  Iris-setosa
-        3          4.6         3.1          1.5         0.2  Iris-setosa
-        4          5.0         3.6          1.4         0.2  Iris-setosa
-        '''
-        # print(check_purity(dt))
-        # kết quả là True, bởi vì 5 phần tử đầu trong tập DL huấn luyện đều có cùng 1 nhãn là Iris-setosa(check_purity(dt))
-
-        # Test hàm create_leaf_node()
-        # leaf_node = create_leaf_node(train_data.values)
-        # print(leaf_node)
-
-        # Test hàm get_point_splits(data) (t)
-        # point_splits = get_point_splits(train_data.values)
-        # print(point_splits)
-        ''' Result: point_splits = {key: value, } <=> {col_index: [], }
-        {
-            0: [4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.15, 6.25, 6.35, 6.45, 6.55, 6.65, 6.75, 6.85, 6.95, 7.05, 7.15, 7.4, 7.65, 7.800000000000001], 
-            1: [2.1, 2.25, 2.3499999999999996, 2.45, 2.55, 2.6500000000000004, 2.75, 2.8499999999999996, 2.95, 3.05, 3.1500000000000004, 3.25, 3.3499999999999996, 3.45, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.300000000000001], 
-            2: [1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.7999999999999998, 2.5999999999999996, 3.4, 3.55, 3.6500000000000004, 3.75, 3.8499999999999996, 3.95, 4.05, 4.15, 4.25, 4.35, 4.45, 4.55, 4.65, 4.75, 4.85, 4.95, 5.05, 5.15, 5.25, 5.35, 5.45, 5.55, 5.65, 5.75, 5.85, 5.95, 6.05, 6.25, 6.5, 6.65, 6.800000000000001], 
-            3: [0.15000000000000002, 0.25, 0.35, 0.45, 0.55, 0.8, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.1500000000000004, 2.25, 2.3499999999999996, 2.45]
-        }
-        '''
-        '''
-        print("Decision Tree")
-        tree = decision_tree_classifier(train_data, max_depth=11)
-        #pprint(tree)
-        y_pred_DT = predict_DT(tree, X_test)
-        # print(y_pred)
-        # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
-        y_test_DT = y_test.tolist()
-        print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
-        confusion_matrix_DT(y_test_DT, y_pred_DT ,[0, 1])
-        print("===========================================")
-
-        print("Naive Bayes")
-        model = naive_bayes_classifier(X_train, y_train)
-        y_pred_NB = predict_NB(X_test, model)
-        cal_accuracy_NB(y_test, y_pred_NB)
-        print("===========================================")'''
