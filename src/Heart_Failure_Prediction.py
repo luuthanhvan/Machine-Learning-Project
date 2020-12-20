@@ -392,7 +392,9 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
 ''' 
 - Hàm dự đoán nhãn cho từng dòng dữ liệu
 - Input:
-- Output:
+    +Cây
+    +Dòng dữ liệu cần dự đoán trong tập test
+- Output:Giá trị nhãn sau khi dự đoán
 '''
 def predict_row(tree, row_data_test):
     left = 0
@@ -436,7 +438,9 @@ def predict_row(tree, row_data_test):
 '''
 - Hàm dự đoán nhãn cho tập dữ liệu test
 - Input:
-- Output:
+    +Cây
+    +Tập dữ liệu test
+- Output: Mảng chứa các giá trị nhãn cho cả tập test
 '''
 def predict_DT(tree, data_test):
     y_pred = []
@@ -448,7 +452,9 @@ def predict_DT(tree, data_test):
 ''' 
 - Hàm tính toán độ chính xác tổng thể'
 - Input:
-- Output:
+    +Tập các giá trị nhãn dự đoán được
+    +Tập các giá trị nhãn của tập test
+- Output: Độ chính xác tổng thể (Đơn vị %)
 '''
 def cal_accuracy_all_DT(y_pred, y_test):
     correct = 0
@@ -463,7 +469,10 @@ def cal_accuracy_all_DT(y_pred, y_test):
 ''' 
 - Hàm tính độ chính xác cho từng thực thể 
 - Input:
-- Output:
+    +Tập các giá trị nhãn của tập test
+    +Tập các giá trị nhãn dự đoán được
+    +Các thực thể cần tính độ chính xác theo thứ tự mong muốn
+- Output: Ma trận độ chính xác của từng thực thể
 '''
 def confusion_matrix_DT(y_test, y_pred, label):
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
