@@ -391,6 +391,8 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
 
 ''' 
 - Hàm dự đoán nhãn cho từng dòng dữ liệu
+- Input:
+- Output:
 '''
 def predict_row(tree, row_data_test):
     left = 0
@@ -433,6 +435,8 @@ def predict_row(tree, row_data_test):
 
 '''
 - Hàm dự đoán nhãn cho tập dữ liệu test
+- Input:
+- Output:
 '''
 def predict_DT(tree, data_test):
     y_pred = []
@@ -442,7 +446,9 @@ def predict_DT(tree, data_test):
     return y_pred
 
 ''' 
-- Hàm tính toán độ chính xác tổng thể' 
+- Hàm tính toán độ chính xác tổng thể'
+- Input:
+- Output:
 '''
 def cal_accuracy_all_DT(y_pred, y_test):
     correct = 0
@@ -456,6 +462,8 @@ def cal_accuracy_all_DT(y_pred, y_test):
 
 ''' 
 - Hàm tính độ chính xác cho từng thực thể 
+- Input:
+- Output:
 '''
 def confusion_matrix_DT(y_test, y_pred, label):
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
