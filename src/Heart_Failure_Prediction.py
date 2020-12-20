@@ -14,32 +14,32 @@ import matplotlib.pyplot as plt
 
 '''
 Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết định:
-1. Đọc dữ liệu (tiền xử lý nếu cần):
-- Input: tên file hoặc đường dẫn đến file .csv
+    1. Đọc dữ liệu (tiền xử lý nếu cần)
+    2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
+    3. Xây dựng cây
+    4. Dự đoán nhãn cho tập dữ liệu kiểm tra
+    5. Tính toán độ chính xác tổng thể' và độ chính xác cho từng phân lớp
+'''
+
+'''
+- Hàm đọc file
+- Input: không
 - Output: trả về tập dữ liệu
-def read_file():
-	# đọc file csv từ thư viện pandas <- dataset
-    return dataset
 '''
 def read_file():
-    # dataset = pd.read_csv("../data_set/iris_data.csv", delimiter=",")
     dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
 '''
-2. Phân chia tập DL theo nghi thức hold-out (tập dữ liệu được chia làm 3 phần, trong đó 2 phần train, 1 phần test)
+- Hàm phân chia tập dữ liệu theo nghi thức hold-out
 - Input:
     + dataset: tập dữ liệu đọc từ file
     + test_size: kích thước tập dữ liệu kiểm tra
 - Output:
 	+ train_data: tập dữ liệu huấn luyện
 	+ test_data: tập dữ liệu kiểm tra
-import random
-def train_test_split(dataset, test_size):
-    return train_data, test_data
 '''
 def train_test_split(dataset, test_size, random_state):
-    
     random.seed(random_state)
 
     if isinstance(test_size, float):
@@ -50,10 +50,10 @@ def train_test_split(dataset, test_size, random_state):
 
     # random các chỉ số cho tập test, lưu vào test_indices
     # hàm random.sample dùng để lấy ngẫu nhiên k phần tử trong danh sách indices
-    # ví dụ: test_size = 100 thì hàm này sẽ lấy ngẫu nhiên 100 phần tử trong danh sác indices 
+    # ví dụ: test_size = 100 thì hàm này sẽ lấy ngẫu nhiên 100 phần tử trong danh sách indices 
     test_indices = random.sample(population=indices, k=test_size)
-
     # print(test_indices)
+
     # lấy các giá trị và lưu vào tập DL test thông qua các chỉ số trong mảng test_indices
     test_data = dataset.iloc[test_indices]
     
@@ -63,39 +63,32 @@ def train_test_split(dataset, test_size, random_state):
     return train_data, test_data
 
 '''
-3. Xây dựng cây
-def decision_tree_classifier(dt, counter, min_samples_leaf, max_depth):
-    return sub_tree
+- Hàm kiểm tra dữ liệu trong 1 nút có thuần nhất hay không. Một nút được xem là có DL thuần nhất 
+khi nút đó chỉ chứa duy nhất 1 nhãn.
+- Input: dữ liệu cần kiểm tra
+- Output: trả về True nếu dữ liệu là thuần nhất, ngược lại trả về False
 
-sub_tree = {"question": ["yes_answer", 
-                         "no_answer"]}
-                         
-example_tree = {'petal_width <= 0.8': ['Iris-setosa',
-                        {'petal_width <= 1.65': [{'petal_length <= 4.95': ['Iris-versicolor',
-                                                                           'Iris-virginica']},
-                                                 'Iris-virginica']}]}
 '''
-# hàm kiểm tra dữ liệu trong 1 nút có thuần nhất hay không
-# một nút được xem là có DL thuần nhất khi nút đó chỉ chứa duy nhất 1 nhãn
 def check_purity(data):
-    label_column = data[:, -1]  # lấy nguyên cột nhãn trong data
-    # print(label_column)
+    # lấy nguyên cột nhãn trong data
+    label_column = data[:, -1]
 
-    classes = np.unique(label_column)  # lấy giá trị các nhãn duy nhất từ cột nhãn
-    # print(classes)
-    # Ví dụ: đối với tập dữ liệu hoa Iris, classes = ['Iris-setosa' 'Iris-versicolor' 'Iris-virginica']
-
-    # kiểm tra dữ liệu trong mảng classes, 
-    # nếu số lượng phần tử trong mảng classes chỉ có 1 nhãn -> thuần nhất -> là nút lá
-    # ngược lại không phải là nút lá 
-
-    # print(len(classes))
+    # loại bỏ các giá trị trùng trên cột nhãn
+    # Ví dụ: đối với tập dữ liệu hoa Iris 
+    # cột nhãn có dạng = ['Iris-setosa' 'Iris-setosa' 'Iris-setosa' 'Iris-versicolor' 'Iris-versicolor' 'Iris-virginica' 'Iris-virginica']
+    classes = np.unique(label_column)
+    # sau khi lấy unique trên cột nhãn thì classes = ['Iris-setosa' 'Iris-versicolor' 'Iris-virginica']
+    # kiểm tra nếu len(classes) == 1 -> thuần nhất -> trả về True, ngược lại trả về False
     if len(classes) == 1:
         return True
     else:
         return False
 
-# hàm tạo nút lá
+'''
+- Hàm tạo nút lá
+- Input: dữ liệu
+- Output: nhãn trên nút lá
+'''
 def create_leaf_node(data):
     label_column = data[:, -1]
 
@@ -124,42 +117,10 @@ def create_leaf_node(data):
     return leaf_node
 
 '''
-def get_point_splits_2(data):
-    point_splits = {} # khởi tạo 1 từ điển rỗng
-    
-    no_rows, no_cols = data.shape
-    
-    for col_index in range(no_cols - 1):
-        column_values = data[:, col_index]
-        
-        unique_column_values = np.unique(column_values) # loại bỏ các giá trị trùng
-        type_of_feature = FEATURE_TYPES[col_index]
-        if type_of_feature == "continuous":
-            
-            point_splits[col_index] = []
-            
-            for index in range(len(unique_column_values)):
-                # dòng này để tránh index = 0, mình sẽ chạy từ index = 1
-                # vì mình cần lấy giá trị trước đó + giá trị hiện tại, mà tại index = 0 thì không có giá trị trước nó
-                if index != 0:
-                    # lấy giá trị hiện tại trong mảng unique_column_values
-                    current_value = unique_column_values[index]
-                    # lấy giá trị trước đó trong mảng unique_column_values
-                    previous_value = unique_column_values[index - 1]
-                    # xác định điểm phân hoạch
-                    point_split = (current_value + previous_value) / 2 # công thức này tham khảo trên mạng
-                    # thêm điểm phân hoạch vào mảng, tại vị trí col_index
-                    point_splits[col_index].append(point_split)
-
-        elif len(unique_column_values) > 1:
-            point_splits[col_index] = unique_column_values
-    # xem cụ thể output ở phần test hàm này bên dưới nhe
-    return point_splits
+- Hàm lấy các điểm phân hoạch. Các điểm phân hoạch sẽ là các điểm có sự thay đổi về lớp
+- Input: dữ liệu
+- Output: một từ điển dạng {cột: mảng các điểm phân hoạch}
 '''
-
-
-# hàm lấy các điểm phân hoạch
-# các điểm phân hoạch sẽ là các điểm có sự thay đổi về lớp
 def get_point_splits(data):
     # khởi tạo một từ điển rỗng
     point_splits = {}
@@ -178,9 +139,16 @@ def get_point_splits(data):
     - Truy xuất:
         student_name = student_info["fullname"] -> result: Luu Thanh Van
     
-    Trong hàm này, potential_splits có dạng {col_index: []}
-    - col_index: chỉ số cột
-    - []: mình sẽ xác định tất cả các điểm phân hoạch trong một cột = (giá trị hiện tại + giá trị trước đó)/2 và lưu vào mảng này
+    Trong hàm này, point_splits có dạng {column_index: []}
+        - column_index: chỉ số cột
+        - []: 
+            + Đối với cột thuộc tính có dữ liệu liểu liên tục thì mình sẽ xác định tất cả các điểm phân hoạch trong một cột là 
+            các điểm có sự thay đổi về lớp sau đó lưu vào mảng này.
+
+            + Đối với cột thuộc tính có dữ liệu liểu rời rạc thì mảng có dạng [0, 1]
+    
+            Ví dụ: point_splits = { 0: [49, 65, 50, ...], 
+                                    1: [0, 1], ... }
     '''
     # lấy hình dạng của dữ liệu, shape sẽ trả về 2 giá trị: giá trị đầu tiên là tổng số  hàng (no_rows), giá trị thứ hai là tổng số cột (no_cols)
     no_rows, no_cols = data.shape
@@ -195,10 +163,10 @@ def get_point_splits(data):
 
         type_of_feature = FEATURE_TYPES[column_index]
 
-        # nếu cột dữ liệu là cột có giá trị kiểu số  (giá trị liên tục)
+        # nếu cột dữ liệu là cột thuộc tính có giá trị kiểu số  (giá trị liên tục)
         if type_of_feature == "continuous":
-            # col_index là các key trong point_splits
-            # khởi tạo giá trị tại key = col_index là 1 mảng rỗng
+            # column_index là các key trong point_splits
+            # khởi tạo giá trị tại key = column_index là 1 mảng rỗng
             point_splits[column_index] = []
 
             # duyệt qua từng dòng trong 1 cột thuộc tính
@@ -207,8 +175,10 @@ def get_point_splits(data):
                 if row_index != 0:
                     # lấy giá trị trước đó
                     previous_class_value = data[row_index-1, -1] 
+                    
                     # lấy giá trị hiện tại
                     current_class_value = data[row_index, -1]
+                    
                     # lấy giá trị kế tiếp
                     next_class_value = data[row_index+1, -1]
 
@@ -217,18 +187,32 @@ def get_point_splits(data):
                         column_value = data[row_index, column_index]
                         point_splits[column_index].append(column_value)
         
-        # feature is categorical
+        # trường hợp cho cột thuộc tính có giá trị kiểu rời rạc
         else:
             point_splits[column_index] = unique_column_values
     
     # print(point_splits)
     return point_splits
 
-# Phân hoạch nhị phân dựa trên 1 giá trị ngưỡng cho 1 thuộc tính (cột) trên tập dữ liệu
+'''
+- Hàm phân hoạch nhị phân dựa trên 1 giá trị ngưỡng cho 1 thuộc tính (cột) trên tập dữ liệu
+- Input:
+    + data: dữ liệu
+    + split_column: chỉ số cột cần phân hoạch
+    + split_value: giá trị phân hoạch (ngưỡng)
+- Output: hai mảng left và right
+    + Đối với thuộc tính có giá trị kiểu liên tục
+        - left là các giá trị nhỏ hơn hoặc bằng giá trị phân hoạch
+        - right là các giá trị lớn hơn giá trị phân hoạch
+    + Đối với thuộc tính có giá trị kiểu rời rạc
+        - left là các giá trị bằng giá trị phân hoạch
+        - right là các giá trị khác giá trị phân hoạch
+'''
 def binary_split_data(data, split_column, split_value):
     split_column_values = data[:, split_column]
-    # print(split_column_value)
+
     type_of_feature = FEATURE_TYPES[split_column]
+
     if type_of_feature == "continuous":
         left = data[split_column_values <= split_value]
         right = data[split_column_values > split_value]
@@ -238,15 +222,18 @@ def binary_split_data(data, split_column, split_value):
     
     return left, right
 
-# 1. Sử dụng độ lợi thông tin, chọn thuộc tính phân hoạch có giá trị lớn nhất
-# Tính độ hỗn loạn thông tin trước khi phân hoạch (entropy)
+'''
+- Hàm tính độ hỗn loạn thông tin trước khi phân hoạch
+- Input: dữ liệu
+- Output: entropy (Info(D))
+'''
 def info(data):
     label_column = data[:, -1]
     classes, counts_classes = np.unique(label_column, return_counts=True)
 
     entropy = 0.0
     for i in range(len(counts_classes)):
-        # Tính xác suất xuất hiện cho từng phân lớp <- lưu vào biến p
+        # Tính xác suất xuất hiện cho từng phân lớp -> lưu vào biến p
         p = counts_classes[i] / sum(counts_classes)
         # Ta có công thức: Info(D) =  entropy(p1, p2,..., pn) = (-p1*log2(p1)) + (-p2*log2(p2)) + ... + (-pn*log2(pn))
         # Vì thế ta cần cộng dồn các giá trị [-p*log2(p)] vào biến entropy
@@ -254,11 +241,17 @@ def info(data):
 
     return entropy
 
-# Tính độ hỗn loạn thông tin sau khi phân hoạch (Info_A)
+'''
+- Hàm tính độ hỗn loạn thông tin sau khi phân hoạch
+- Input: dữ liệu đã phân hoạch hai phần left và right
+- Output: overall_entropy (Info_A(D))
+'''
 def info_A(left, right):
-    # Ta có công thức: Info_A(D) = (D1/D)*Info(D1) + (D2/D)*Info(D2) + ... + (Dv/D)*Info(Dv)
-    # Ta phân hoạch DL ra thành 2 phần: left và right
-    # Do đó ta sẽ tính Info(left) và Info(right), sau đó cộng 2 kết quả này <- overall_entropy
+    '''
+    Ta có công thức: Info_A(D) = (D1/D)*Info(D1) + (D2/D)*Info(D2) + ... + (Dv/D)*Info(Dv)
+    Ta phân hoạch DL ra thành 2 phần: left và right. 
+    Do đó ta sẽ tính Info(left) và Info(right) sau đó cộng 2 kết quả này -> lưu vào biến overall_entropy
+    '''
     D = len(left) + len(right)  # tính tổng số lượng phần tử trong tập dữ liệu D
     D1 = len(left)
     D2 = len(right)
@@ -266,8 +259,15 @@ def info_A(left, right):
     overall_entropy = ((D1 / D) * info(left)) + ((D2 / D) * info(right))
 
     return overall_entropy
-
-# Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
+'''
+- Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
+- Input:
+    + data: dữ liệu
+    + point_splits: các điểm phân hoạch (output của hàm get_point_splits)
+- Output:
+    + best_split_column: thuộc tính (chỉ số cột) mà ta sẽ phân hoạch dữ liệu trên cột đó
+    + best_split_value: giá trị phân hoạch
+'''
 def choose_best_split(data, point_splits):
     # để tìm được độ lợi thông tin lớn, ta cần khởi tạo giá trị ban đầu cho biến information_gain có giá trị là âm vô cùng
     information_gain = -9999999
@@ -288,14 +288,26 @@ def choose_best_split(data, point_splits):
     # cuối cùng trả về thuộc tính (vị trí cột) và giá trị để phân hoạch
     return best_split_column, best_split_value
 
-# hàm kiểm tra giá trị của 1 cột thuộc tính, trả về True nếu là giá trị liên tục, ngược lại trả về false
+'''
+- Hàm kiểm tra giá trị của 1 cột thuộc tính xem các giá trị của cột đó là giá trị liên tục hay rời rạc
+- Input: cột dữ liệu cần kiểm tra 
+- Output: trả về True nếu cột đó có giá trị liên tục, ngược lại trả về False
+'''
 def is_continuous(column):
     unique_column_values = np.unique(column)
     if len(unique_column_values) > 2:
         return True
     return False
 
-# phân chia lại tập dữ liệu thành hai phần: 1 phần chứa các thuộc tính có giá trị liên tục, 1 phần chứa các giá trị không liên tục
+'''
+- Hàm xét xem giá trị của một cột thuộc tính trong 1 tập dữ liệu là kiểu liên tục hay rời rạc
+- Input: dữ liệu
+- Output: mảng feature_types
+    + chỉ số mảng tương ứng với chỉ số cột
+    + giá trị ứng với các chỉ số mảng là continuous hoặc categorical
+        - continuous: là các cột có giá trị kiểu liên tục
+        - categorical: là các cột có giá trị kiểu rời rạc
+'''
 def determine_type_of_feature(data):
     feature_types = []
     no_rows, no_cols = data.shape # lấy số lượng hàng, cột
@@ -311,6 +323,20 @@ def determine_type_of_feature(data):
     
     return feature_types
 
+'''    
+- Hàm xây dựng cây
+- Input:
+    + dt: dữ liệu
+    + counter: đếm độ sâu của cây
+    + min_samples_leaf: dùng để dừng sớm quá trình phân hoạch
+    + max_depth: độ sâu của cây
+- Output: cây
+Ví dụ:                     
+example_tree = {'petal_width <= 0.8': ['Iris-setosa',
+                        {'petal_width <= 1.65': [{'petal_length <= 4.95': ['Iris-versicolor',
+                                                                           'Iris-virginica']},
+                                                 'Iris-virginica']}]}
+'''
 def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):    
     # nút gốc
     if counter == 0:
@@ -363,10 +389,9 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
         
         return sub_tree
 
+''' 
+- Hàm dự đoán nhãn cho từng dòng dữ liệu
 '''
-4. Dự đoán nhãn cho tập dữ liệu kiểm tra
-'''
-# Dự đoán nhãn cho từng dòng dữ liệu
 def predict_row(tree, row_data_test):
     left = 0
     right = 1
@@ -406,7 +431,9 @@ def predict_row(tree, row_data_test):
         else:
             return tree.get(label)[right]
 
-# Dự đoán nhãn cho tập dữ liệu test
+'''
+- Hàm dự đoán nhãn cho tập dữ liệu test
+'''
 def predict_DT(tree, data_test):
     y_pred = []
     for row in range(0, len(data_test)):
@@ -414,8 +441,9 @@ def predict_DT(tree, data_test):
         y_pred.append(predict_row(tree, row_data))
     return y_pred
 
-
-'''5. Tính toán độ chính xác tổng thể'''
+''' 
+- Hàm tính toán độ chính xác tổng thể' 
+'''
 def cal_accuracy_all_DT(y_pred, y_test):
     correct = 0
     # Lặp tất cả các nhãn trong tập test
@@ -426,7 +454,9 @@ def cal_accuracy_all_DT(y_pred, y_test):
     accuracy_score = correct / len(y_pred) * 100
     return accuracy_score
 
-'''6.Hàm tính độ chính xác cho từng thực thể'''
+''' 
+- Hàm tính độ chính xác cho từng thực thể 
+'''
 def confusion_matrix_DT(y_test, y_pred, label):
     # Tạo ma trận dự đoán cho từng giá trị thông qua ma trận 2 chiều
     arr = [[]]
@@ -473,12 +503,26 @@ def predict_NB(X_test, model):
     y_pred = model.predict(X_test)
     return y_pred
 
-# Calculating accuracy
 def cal_accuracy_NB(y_test, y_pred):
     print(confusion_matrix(y_test, y_pred, labels=[1, 0]))
     print("Accuracy is ", accuracy_score(y_test, y_pred)*100)
 
 def main():
+    dataset = read_file()
+
+    np.random.seed(2)
+    random_state = np.random.choice(100, size=11, replace=False)
+    max_depth = np.random.choice(11, size=11, replace=False)
+    min_samples_leaf = np.random.choice(100, size=11, replace=False)
+
+    # loại bỏ số 0
+    random_state = np.delete(random_state, np.where(random_state == 0))
+    max_depth = np.delete(max_depth, np.where(max_depth == 0))
+    min_samples_leaf = np.delete(min_samples_leaf, np.where(min_samples_leaf == 0))
+    # print("random_state", random_state)
+    # print("max_depth", max_depth)
+    # print("min_samples_leaf", min_samples_leaf)
+    
     dataset = read_file()
     time1 = []
     time2 = []
@@ -486,9 +530,8 @@ def main():
     phantram2 = []
     z = []
     i=0
-    for i in range(15):
-        random.seed(15)
-        random_num = random.randint(1, 200) + i
+    for i in range(0, 10):
+        random_num = random_state[i] + i
         
         train_data, test_data = train_test_split(dataset, test_size=1/3.0, random_state=random_num)
 
@@ -496,54 +539,11 @@ def main():
         X_test = test_data.iloc[:, :-1]  # bỏ cột cuối cùng, lấy các cột còn lại
 
         y_train = train_data.iloc[:, -1]
-        X_train = train_data.iloc[:, :-1]
-
-        '''
-                                                    Độ chính xác TB
-        max-depth = 6       min_sample_leaf = 25        82.3 
-        max-depth = 7       min_sample_leaf = 25        82.3 
-        max-depth = 8       min_sample_leaf = 25        82.2 
-        max-depth = 9       min_sample_leaf = 25        82.1 
-        max-depth = 10      min_sample_leaf = 25        82.1 
-        max-depth = 11      min_sample_leaf = 25        82.1 
-
-
-        max-depth = 6       min_sample_leaf = 50        82.5
-        max-depth = 7       min_sample_leaf = 50        82.5 
-        max-depth = 8       min_sample_leaf = 50        82.5  
-        max-depth = 9       min_sample_leaf = 50        82.5  
-        max-depth = 10      min_sample_leaf = 50        82.5   
-        max-depth = 11      min_sample_leaf = 50        82.5  
-
-
-        max-depth = 6       min_sample_leaf = 50        82.5 
-        max-depth = 7       min_sample_leaf = 50        82.5   
-        max-depth = 8       min_sample_leaf = 50        82.5  
-        max-depth = 9       min_sample_leaf = 50        82.5  
-        max-depth = 10      min_sample_leaf = 50        82.5   
-        max-depth = 11      min_sample_leaf = 50        82.5   
-
-
-        max-depth = 6       min_sample_leaf = 70 or 80     82.7   
-        max-depth = 7       min_sample_leaf = 70 or 80     82.7  
-        max-depth = 8       min_sample_leaf = 70 or 80     82.7  
-        max-depth = 9       min_sample_leaf = 70 or 80     82.7  
-        max-depth = 10      min_sample_leaf = 70 or 80     82.7 
-        max-depth = 11      min_sample_leaf = 70 or 80     82.7   
-
-
-        max-depth = 6       min_sample_leaf = 90 or 100     82.9   
-        max-depth = 7       min_sample_leaf = 90 or 100     82.9  
-        max-depth = 8       min_sample_leaf = 90 or 100     82.9 
-        max-depth = 9       min_sample_leaf = 90 or 100     82.9   
-        max-depth = 10      min_sample_leaf = 90 or 100     82.9 
-        max-depth = 11      min_sample_leaf = 90 or 100     82.9 
-
-        '''
+        X_train = train_data.iloc[:, :-1] 
 
         print("Decision Tree")
         print(i+1, "random state =", random_num)
-        tree = decision_tree_classifier(train_data, min_samples_leaf=90, max_depth=7)
+        tree = decision_tree_classifier(train_data, min_samples_leaf=min_samples_leaf[i], max_depth=max_depth[i])
         # pprint(tree)
         seconds = time.time()
         y_pred_DT = predict_DT(tree, X_test)
@@ -552,9 +552,7 @@ def main():
         # Chuyển kiểu dữ liệu y_test để dễ dàng tính độ chính xác tổng thể
         y_test_DT = y_test.tolist()
         print("Do chinh xac: ", cal_accuracy_all_DT(y_pred_DT, y_test_DT))
-        
         phantram1.append(cal_accuracy_all_DT(y_pred_DT, y_test_DT))
-        
         confusion_matrix_DT(y_test_DT, y_pred_DT ,[1, 0])
         print("===========================================")
 
@@ -567,7 +565,7 @@ def main():
         phantram2.append(accuracy_score(y_test, y_pred_NB)*100)
         print("===========================================")
         z.append(i+1)
-        i+=1 
+        i+=1
     
     print("\n\nBảng thống kê độ chính xác và thời gian của 2 giải thuật\n")
     print("|---|---------------------|-------------------------------------------------|")
@@ -581,14 +579,12 @@ def main():
     print("\nĐộ chính và thời gian trung bình của giải thuật cây quyết định là:",'{0:10.5f}'.format(sum(phantram1)/len(phantram1)),'{0:10.5f}'.format(sum(time1)/len(time1)))
     print("\nĐộ chính và thời gian trung bình của giải thuật Bayes là:",'{0:10.5f}'.format(sum(phantram2)/len(phantram2)),'{0:10.5f}'.format(sum(time2)/len(time2)))
 
-    plt.axis([0,15,65,100])
+    plt.axis([0,10,65,100])
     plt.plot(z,phantram1,color="blue")
     plt.plot(z,phantram2,color="red")
     plt.xlabel("Lần lặp")
     plt.ylabel("Độ chính xác")
     plt.show() 
-    
-    # print("\nĐộ chính và thời gian trung bình của giải thuật cây quyết định là:",'{0:10.5f}'.format(sum(phantram1)/len(phantram1)))
     
 # gọi hàm main
 if __name__ == "__main__":
