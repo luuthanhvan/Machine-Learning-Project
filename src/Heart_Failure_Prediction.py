@@ -393,8 +393,8 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
 - Hàm dự đoán nhãn cho từng dòng dữ liệu
 - Input:
     +Cây
-    +Dòng dữ liệu cần dự đoán trong tập test
-- Output:Giá trị nhãn sau khi dự đoán
+    +Dòng dữ liệu cần dự đoán trong tập test.
+- Output:Giá trị nhãn sau khi dự đoán.
 '''
 def predict_row(tree, row_data_test):
     left = 0
