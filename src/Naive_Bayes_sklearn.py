@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix 
 
 def read_file():
-    dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
+    dataset = pd.read_csv("../dataset/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
 def split_data(dataset):

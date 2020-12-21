@@ -23,9 +23,9 @@ def read_file():
     return dataset
 '''
 def read_file():
-    # dataset = pd.read_csv("../data_set/iris_data.csv", delimiter=",")
-    dataset = pd.read_csv("../data_set/test1.csv", delimiter=",")
-    # dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
+    # dataset = pd.read_csv("../dataset/iris_data.csv", delimiter=",")
+    dataset = pd.read_csv("../dataset/test1.csv", delimiter=",")
+    # dataset = pd.read_csv("../dataset/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
 '''

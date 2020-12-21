@@ -27,7 +27,7 @@ Các bước và các hàm cần định nghĩa khi xây dựng Cây quyết đ�
 - Output: trả về tập dữ liệu
 '''
 def read_file():
-    dataset = pd.read_csv("../data_set/heart_failure_clinical_records_dataset.csv", delimiter=",")
+    dataset = pd.read_csv("../dataset/heart_failure_clinical_records_dataset.csv", delimiter=",")
     return dataset
 
 '''
@@ -67,7 +67,6 @@ def train_test_split(dataset, test_size, random_state):
 khi nút đó chỉ chứa duy nhất 1 nhãn.
 - Input: dữ liệu cần kiểm tra
 - Output: trả về True nếu dữ liệu là thuần nhất, ngược lại trả về False
-
 '''
 def check_purity(data):
     # lấy nguyên cột nhãn trong data
@@ -86,7 +85,7 @@ def check_purity(data):
 
 '''
 - Hàm tạo nút lá
-- Input: dữ liệu
+- Input: dữ liệu trong một nút
 - Output: nhãn trên nút lá
 '''
 def create_leaf_node(data):
@@ -118,7 +117,7 @@ def create_leaf_node(data):
 
 '''
 - Hàm lấy các điểm phân hoạch. Các điểm phân hoạch sẽ là các điểm có sự thay đổi về lớp
-- Input: dữ liệu
+- Input: tập dữ liệu cần lấy các điểm phân hoạch
 - Output: một từ điển dạng {cột: mảng các điểm phân hoạch}
 '''
 def get_point_splits(data):
@@ -197,7 +196,7 @@ def get_point_splits(data):
 '''
 - Hàm phân hoạch nhị phân dựa trên 1 giá trị ngưỡng cho 1 thuộc tính (cột) trên tập dữ liệu
 - Input:
-    + data: dữ liệu
+    + data: tập dữ liệu cần phân hoạch
     + split_column: chỉ số cột cần phân hoạch
     + split_value: giá trị phân hoạch (ngưỡng)
 - Output: hai mảng left và right
@@ -223,9 +222,9 @@ def binary_split_data(data, split_column, split_value):
     return left, right
 
 '''
-- Hàm tính độ hỗn loạn thông tin trước khi phân hoạch
-- Input: dữ liệu
-- Output: entropy (Info(D))
+- Hàm tính độ hỗn loạn thông tin trước khi phân hoạch (Info(D))
+- Input: dữ liệu cần tính entropy
+- Output: entropy
 '''
 def info(data):
     label_column = data[:, -1]
@@ -262,7 +261,7 @@ def info_A(left, right):
 '''
 - Hàm chọn ra thuộc tính và giá trị của thuộc tính đó để phân hoạch dựa vào giá trị độ lợi thông tin lớn nhất
 - Input:
-    + data: dữ liệu
+    + data: tập dữ liệu
     + point_splits: các điểm phân hoạch (output của hàm get_point_splits)
 - Output:
     + best_split_column: thuộc tính (chỉ số cột) mà ta sẽ phân hoạch dữ liệu trên cột đó
@@ -290,7 +289,7 @@ def choose_best_split(data, point_splits):
 
 '''
 - Hàm kiểm tra giá trị của 1 cột thuộc tính xem các giá trị của cột đó là giá trị liên tục hay rời rạc
-- Input: cột dữ liệu cần kiểm tra 
+- Input: các giá trị của cột dữ liệu cần kiểm tra. 
 - Output: trả về True nếu cột đó có giá trị liên tục, ngược lại trả về False
 '''
 def is_continuous(column):
@@ -301,7 +300,7 @@ def is_continuous(column):
 
 '''
 - Hàm xét xem giá trị của một cột thuộc tính trong 1 tập dữ liệu là kiểu liên tục hay rời rạc
-- Input: dữ liệu
+- Input: tập dữ liệu
 - Output: mảng feature_types
     + chỉ số mảng tương ứng với chỉ số cột
     + giá trị ứng với các chỉ số mảng là continuous hoặc categorical
@@ -392,9 +391,9 @@ def decision_tree_classifier(dt, counter=0, min_samples_leaf=2, max_depth=5):
 ''' 
 - Hàm dự đoán nhãn cho từng dòng dữ liệu
 - Input:
-    +Cây
-    +Dòng dữ liệu cần dự đoán trong tập test.
-- Output:Giá trị nhãn sau khi dự đoán.
+    + Cây
+    + Dòng dữ liệu cần dự đoán trong tập test.
+- Output: Giá trị nhãn sau khi dự đoán.
 '''
 def predict_row(tree, row_data_test):
     left = 0
@@ -438,8 +437,8 @@ def predict_row(tree, row_data_test):
 '''
 - Hàm dự đoán nhãn cho tập dữ liệu test
 - Input:
-    +Cây
-    +Tập dữ liệu test
+    + Cây
+    + Tập dữ liệu test
 - Output: Mảng chứa các giá trị nhãn cho cả tập test
 '''
 def predict_DT(tree, data_test):
@@ -452,8 +451,8 @@ def predict_DT(tree, data_test):
 ''' 
 - Hàm tính toán độ chính xác tổng thể'
 - Input:
-    +Tập các giá trị nhãn dự đoán được
-    +Tập các giá trị nhãn của tập test
+    + Tập các giá trị nhãn dự đoán được
+    + Tập các giá trị nhãn của tập test
 - Output: Độ chính xác tổng thể (Đơn vị %)
 '''
 def cal_accuracy_all_DT(y_pred, y_test):
@@ -469,9 +468,9 @@ def cal_accuracy_all_DT(y_pred, y_test):
 ''' 
 - Hàm tính độ chính xác cho từng thực thể 
 - Input:
-    +Tập các giá trị nhãn của tập test
-    +Tập các giá trị nhãn dự đoán được
-    +Các thực thể cần tính độ chính xác theo thứ tự mong muốn
+    + Tập các giá trị nhãn của tập test
+    + Tập các giá trị nhãn dự đoán được
+    + Các thực thể cần tính độ chính xác theo thứ tự mong muốn
 - Output: Ma trận độ chính xác của từng thực thể
 '''
 def confusion_matrix_DT(y_test, y_pred, label):
